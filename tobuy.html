@@ -117,7 +117,7 @@
     }
     .move-btn:hover { background: #e0e0e0; }
     .delete-btn:hover { opacity: 0.8; }
-    /* Modal for adding/updating products */
+    /* Modal for adding/updating product */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -141,7 +141,8 @@
       margin-bottom: 15px;
       text-align: center;
     }
-    .modal-line input, .modal-line textarea {
+    .modal-line input,
+    .modal-line textarea {
       font-size: 18px;
       padding: 5px;
       text-align: center;
@@ -266,7 +267,7 @@
   <!-- Modal Popup for Viewing Image -->
   <div class="image-modal-overlay" id="imageModalOverlay">
     <div class="image-modal" id="imageModal">
-      <!-- The image will be injected here -->
+      <!-- Image will be injected here -->
     </div>
   </div>
 
@@ -274,12 +275,12 @@
   <script>
     // *** Firebase Setup ***
     const firebaseConfig = {
-      apiKey: "AIzaSyCEeK9YuJ-GI02GTXd3MM03QEIkujI1hG4",
-      authDomain: "slimanwebsite.firebaseapp.com",
-      projectId: "slimanwebsite",
-      storageBucket: "slimanwebsite.appspot.com", // Corrected bucket
-      messagingSenderId: "657484443279",
-      appId: "1:657484443279:web:9acd4781f37e5c40924afa"
+      apiKey: "AIzaSyBH0RwdCkSOQwCR8v2JKO9pliyOkKUuhBI",
+      authDomain: "websliman.firebaseapp.com",
+      projectId: "websliman",
+      storageBucket: "websliman.appspot.app",
+      messagingSenderId: "36202244653",
+      appId: "1:36202244653:web:c7d9aa36b425cc63c3e6a4"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -321,7 +322,7 @@
       editingItem = null;
       quantityInput.value = 1;
       productNameInput.value = '';
-      selectedImageFile = null;  // reset selected file
+      selectedImageFile = null;
       modalOverlay.style.display = 'flex';
     });
     cancelButton.addEventListener('click', () => {
@@ -341,7 +342,7 @@
       fileInput.click();
     });
     cameraButton.addEventListener('click', () => {
-      fileInput.setAttribute('capture', 'environment'); // prompt camera
+      fileInput.setAttribute('capture', 'environment'); // prompt camera on mobile
       fileInput.click();
     });
     fileInput.addEventListener('change', (e) => {
@@ -363,13 +364,13 @@
       return db.collection("products").add(data);
     }
     function updateProductInFirestore(id, data) {
-      db.collection("products").doc(id).update(data);
+      return db.collection("products").doc(id).update(data);
     }
     function deleteProductFromFirestore(id) {
-      db.collection("products").doc(id).delete();
+      return db.collection("products").doc(id).delete();
     }
     function toggleProductInFirestore(id, newPurchased) {
-      db.collection("products").doc(id).update({ purchased: newPurchased });
+      return db.collection("products").doc(id).update({ purchased: newPurchased });
     }
 
     // *** Modal "Add/Update" Handler ***
@@ -412,13 +413,12 @@
       productItem.draggable = true;
       productItem.dataset.id = product.id;
       productItem.dataset.category = product.category;
-      // Order: move-btn, product-details, delete-btn
       productItem.innerHTML = `
         <button class="move-btn"></button>
         <div class="product-details">${product.quantity} - ${product.name}</div>
         <button class="delete-btn">X</button>
       `;
-      // If product has imageUrl, add a view-image button with a camera icon
+      // If there is an image URL, add a button with a camera icon
       if (product.imageUrl) {
         const viewImageButton = document.createElement('button');
         viewImageButton.className = 'view-image-btn';
@@ -508,7 +508,6 @@
 
     // *** Image Modal for Viewing Uploaded Photo ***
     function showImageModal(url) {
-      // Clear any previous content
       imageModal.innerHTML = "";
       const img = document.createElement('img');
       img.src = url;
