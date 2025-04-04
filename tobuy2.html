@@ -4,25 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>רשימת קניות</title>
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (using compat versions) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
   <style>
     body {
       font-family: sans-serif;
       margin: 0;
       padding: 0;
-      direction: rtl; /* Hebrew support */
+      direction: rtl;
       background: #f0f0f0;
     }
-    /* Header styles */
     header {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       background: #eee;
-      /* Add some padding to ensure buttons are not cut off */
       padding: 10px;
       display: flex;
       align-items: center;
@@ -30,11 +29,10 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       z-index: 1000;
     }
-    /* Navigation buttons (lists) */
     .nav-buttons {
       display: flex;
       gap: 10px;
-      margin-right: 0.5cm; /* 0.5cm space from the right edge */
+      margin-right: 0.5cm;
     }
     .nav-buttons button {
       background: lightblue;
@@ -46,12 +44,11 @@
       cursor: pointer;
     }
     .nav-buttons button.active {
-      border: 5px solid Green;
+      border: 5px solid green;
     }
-    /* Center the add button */
     .add-button {
       position: absolute;
-      left: 30%;
+      left: 50%;
       transform: translateX(-50%);
       font-size: 24px;
       width: 50px;
@@ -62,12 +59,10 @@
       color: white;
       cursor: pointer;
     }
-    /* Main content container */
     .content {
-      padding-top: 90px; /* space for header */
+      padding-top: 90px;
       padding: 68px;
     }
-    /* List section: each category */
     .list-section {
       display: none;
     }
@@ -75,10 +70,9 @@
       display: block;
     }
     .list-section h3 {
-      margin-top: 10px; /* push the title down so it's not hidden */
+      margin-top: 10px;
       margin-bottom: 5px;
     }
-    /* To-buy and purchased containers */
     .to-buy, .purchased {
       margin-bottom: 20px;
       background: #fff;
@@ -86,7 +80,6 @@
       border-radius: 8px;
       min-height: 50px;
     }
-    /* Product item style */
     .product-item {
       background: #f7f7f7;
       border: 1px solid #ddd;
@@ -98,11 +91,10 @@
     }
     .product-details {
       flex-grow: 1;
-      margin: 0 10px; /* spacing on left/right of details */
+      margin: 0 10px;
       font-size: 16px;
       cursor: pointer;
     }
-    /* Delete button: red background, white X */
     .delete-btn {
       border: none;
       cursor: pointer;
@@ -115,7 +107,6 @@
       color: white;
       border-radius: 50%;
     }
-    /* Circle (move) button: circular with white background and blue border, no inner text */
     .move-btn {
       border: 2px solid #007bff;
       background: white;
@@ -124,13 +115,9 @@
       height: 30px;
       cursor: pointer;
     }
-    .move-btn:hover {
-      background: #e0e0e0;
-    }
-    .delete-btn:hover {
-      opacity: 0.8;
-    }
-    /* Modal styles */
+    .move-btn:hover { background: #e0e0e0; }
+    .delete-btn:hover { opacity: 0.8; }
+    /* Modal for adding/updating product */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -154,19 +141,14 @@
       margin-bottom: 15px;
       text-align: center;
     }
-    .modal-line input, .modal-line textarea {
+    .modal-line input,
+    .modal-line textarea {
       font-size: 18px;
       padding: 5px;
       text-align: center;
     }
-    .modal-line input {
-      width: 60px;
-    }
-    .modal-line textarea {
-      width: 90%;
-      height: 40px;
-      resize: none;
-    }
+    .modal-line input { width: 60px; }
+    .modal-line textarea { width: 90%; height: 40px; resize: none; }
     .modal-buttons {
       display: flex;
       justify-content: space-around;
@@ -176,10 +158,37 @@
       font-size: 16px;
       cursor: pointer;
     }
-    /* Dragging style (optional visual) */
-    .product-item.dragging {
-      opacity: 0.5;
+    /* Modal for viewing product image */
+    .image-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1100;
     }
+    .image-modal {
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      max-width: 90%;
+      max-height: 90%;
+    }
+    .image-modal img {
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+    }
+    /* Hidden file input */
+    #fileInput {
+      display: none;
+    }
+    /* Optional dragging style */
+    .product-item.dragging { opacity: 0.5; }
   </style>
 </head>
 <body>
@@ -226,20 +235,25 @@
     </div>
   </div>
 
-  <!-- Modal Popup -->
+  <!-- Modal Popup for Adding/Editing Product -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
-      <!-- Line 1: Quantity control with - and + -->
+      <!-- Line 1: Quantity control -->
       <div class="modal-line">
         <button id="decrement">-</button>
         <input type="number" id="quantity" value="1" min="1">
         <button id="increment">+</button>
       </div>
-      <!-- Line 2: Editable product name (textarea) -->
+      <!-- Line 2: Product Name -->
       <div class="modal-line">
         <textarea id="productName" placeholder="שם מוצר"></textarea>
       </div>
-      <!-- Line 3: Cancel and Add buttons -->
+      <!-- New Line: Buttons for Gallery and Camera -->
+      <div class="modal-line modal-buttons">
+        <button id="galleryButton">גלריה</button>
+        <button id="cameraButton">מצלמה</button>
+      </div>
+      <!-- Line 3: Cancel and Add -->
       <div class="modal-line modal-buttons">
         <button id="cancel">ביטול</button>
         <button id="addProduct">הוסף</button>
@@ -247,24 +261,37 @@
     </div>
   </div>
 
+  <!-- Hidden File Input -->
+  <input type="file" id="fileInput" accept="image/*">
+
+  <!-- Modal Popup for Viewing Image -->
+  <div class="image-modal-overlay" id="imageModalOverlay">
+    <div class="image-modal" id="imageModal">
+      <!-- Image will be injected here -->
+    </div>
+  </div>
+
   <!-- Firebase and App Script -->
   <script>
     // *** Firebase Setup ***
-    // Update these values with your actual Firebase project configuration:
     const firebaseConfig = {
-      apiKey: "AIzaSyCEeK9YuJ-GI02GTXd3MM03QEIkujI1hG4",
-      authDomain: "slimanwebsite.firebaseapp.com",
-      projectId: "slimanwebsite",
-      storageBucket: "slimanwebsite.firebasestorage.app",
-      messagingSenderId: "657484443279",
-      appId: "1:657484443279:web:9acd4781f37e5c40924afa"
+      apiKey: "AIzaSyBH0RwdCkSOQwCR8v2JKO9pliyOkKUuhBI",
+      authDomain: "websliman.firebaseapp.com",
+      projectId: "websliman",
+      storageBucket: "websliman.appspot.app",
+      messagingSenderId: "36202244653",
+      appId: "1:36202244653:web:c7d9aa36b425cc63c3e6a4"
     };
-    // Initialize Firebase using the compat libraries:
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    const storage = firebase.storage();
+
+    // *** Global Variables ***
+    let activeList = "super";
+    let editingItem = null;
+    let selectedImageFile = null;
 
     // *** DOM Elements ***
-    let activeList = "super"; // default active category
     const modalOverlay = document.getElementById('modalOverlay');
     const openModalButton = document.getElementById('openModal');
     const cancelButton = document.getElementById('cancel');
@@ -273,18 +300,19 @@
     const decrementButton = document.getElementById('decrement');
     const quantityInput = document.getElementById('quantity');
     const productNameInput = document.getElementById('productName');
-    let editingItem = null; // holds the DOM element being edited
+    const galleryButton = document.getElementById('galleryButton');
+    const cameraButton = document.getElementById('cameraButton');
+    const fileInput = document.getElementById('fileInput');
+    const imageModalOverlay = document.getElementById('imageModalOverlay');
+    const imageModal = document.getElementById('imageModal');
 
-    // Navigation buttons to switch lists
-    const navButtons = document.querySelectorAll('.nav-buttons button');
-    navButtons.forEach(btn => {
+    // *** Navigation Buttons ***
+    document.querySelectorAll('.nav-buttons button').forEach(btn => {
       btn.addEventListener('click', () => {
-        navButtons.forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.nav-buttons button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         activeList = btn.getAttribute('data-list');
-        document.querySelectorAll('.list-section').forEach(section => {
-          section.classList.remove('active');
-        });
+        document.querySelectorAll('.list-section').forEach(section => section.classList.remove('active'));
         document.getElementById('list-' + activeList).classList.add('active');
       });
     });
@@ -294,6 +322,7 @@
       editingItem = null;
       quantityInput.value = 1;
       productNameInput.value = '';
+      selectedImageFile = null;
       modalOverlay.style.display = 'flex';
     });
     cancelButton.addEventListener('click', () => {
@@ -307,22 +336,77 @@
       if (currentVal > 1) quantityInput.value = currentVal - 1;
     });
 
-    // *** Firestore CRUD Functions ***
-    function addProductToFirestore(data) {
-      db.collection("products").add(data);
-    }
-    function updateProductInFirestore(id, data) {
-      db.collection("products").doc(id).update(data);
-    }
-    function deleteProductFromFirestore(id) {
-      db.collection("products").doc(id).delete();
-    }
-    function toggleProductInFirestore(id, newPurchased) {
-      db.collection("products").doc(id).update({ purchased: newPurchased });
+    // *** File Input Controls ***
+    galleryButton.addEventListener('click', () => {
+      fileInput.removeAttribute('capture'); // allow gallery selection
+      fileInput.click();
+    });
+    cameraButton.addEventListener('click', () => {
+      fileInput.setAttribute('capture', 'environment'); // prompt camera on mobile
+      fileInput.click();
+    });
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        selectedImageFile = e.target.files[0];
+        console.log("Selected file:", selectedImageFile.name);
+      }
+    });
+
+    // *** Firebase Storage Upload Function ***
+    function uploadImage(file, productId) {
+      const storageRef = storage.ref();
+      const fileRef = storageRef.child(`product_images/${productId}_${file.name}`);
+      return fileRef.put(file).then(snapshot => snapshot.ref.getDownloadURL());
     }
 
+    // *** Firestore CRUD Functions ***
+    function addProductToFirestore(data) {
+      return db.collection("products").add(data);
+    }
+    function updateProductInFirestore(id, data) {
+      return db.collection("products").doc(id).update(data);
+    }
+    function deleteProductFromFirestore(id) {
+      return db.collection("products").doc(id).delete();
+    }
+    function toggleProductInFirestore(id, newPurchased) {
+      return db.collection("products").doc(id).update({ purchased: newPurchased });
+    }
+
+    // *** Modal "Add/Update" Handler ***
+    addProductButton.addEventListener('click', () => {
+      const qty = quantityInput.value;
+      const name = productNameInput.value.trim();
+      if (name === '') {
+        alert('נא להזין שם מוצר');
+        return;
+      }
+      if (editingItem) {
+        const id = editingItem.dataset.id;
+        updateProductInFirestore(id, { quantity: qty, name: name });
+      } else {
+        const productData = {
+          quantity: qty,
+          name: name,
+          category: activeList,
+          purchased: false,
+          timestamp: Date.now()
+        };
+        addProductToFirestore(productData).then(docRef => {
+          const productId = docRef.id;
+          if (selectedImageFile) {
+            uploadImage(selectedImageFile, productId)
+              .then(downloadURL => {
+                updateProductInFirestore(productId, { imageUrl: downloadURL });
+              })
+              .catch(err => console.error("Image upload error:", err));
+          }
+        });
+      }
+      modalOverlay.style.display = 'none';
+    });
+
     // *** Render Functions ***
-    // Create a product item element and bind its events.
     function createProductElement(product) {
       const productItem = document.createElement('div');
       productItem.className = 'product-item';
@@ -334,7 +418,19 @@
         <div class="product-details">${product.quantity} - ${product.name}</div>
         <button class="delete-btn">X</button>
       `;
-      // Edit on clicking the product details
+      // If there is an image URL, add a button with a camera icon
+      if (product.imageUrl) {
+        const viewImageButton = document.createElement('button');
+        viewImageButton.className = 'view-image-btn';
+        viewImageButton.style.marginLeft = "5px";
+        viewImageButton.innerText = "📷";
+        viewImageButton.addEventListener('click', (e) => {
+          e.stopPropagation();
+          showImageModal(product.imageUrl);
+        });
+        productItem.appendChild(viewImageButton);
+      }
+      // Edit when clicking product details
       productItem.querySelector('.product-details').addEventListener('click', () => {
         editingItem = productItem;
         const parts = productItem.querySelector('.product-details').innerText.split(' - ');
@@ -347,12 +443,12 @@
         e.stopPropagation();
         deleteProductFromFirestore(product.id);
       });
-      // Toggle purchased state on circle button click
+      // Toggle purchased state on move button click
       productItem.querySelector('.move-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         toggleProductInFirestore(product.id, !product.purchased);
       });
-      // Drag events (for visual feedback only; not saving order)
+      // Drag events for visual feedback
       productItem.addEventListener('dragstart', () => {
         productItem.classList.add('dragging');
       });
@@ -362,9 +458,7 @@
       return productItem;
     }
 
-    // Re-render all products from Firestore snapshot.
     function renderProducts(snapshot) {
-      // Clear each list (preserving the title header)
       ['super', 'lacham', 'pharm'].forEach(category => {
         document.getElementById('toBuy-' + category).innerHTML = "<h3>לקנות</h3>";
         document.getElementById('purchased-' + category).innerHTML = "<h3>נקנו</h3>";
@@ -381,44 +475,18 @@
       });
     }
 
-    // *** Modal "Add/Update" Handler ***
-    addProductButton.addEventListener('click', () => {
-      const qty = quantityInput.value;
-      const name = productNameInput.value.trim();
-      if (name === '') {
-        alert('נא להזין שם מוצר');
-        return;
-      }
-      if (editingItem) {
-        // Update existing product in Firestore.
-        const id = editingItem.dataset.id;
-        updateProductInFirestore(id, { quantity: qty, name: name });
-      } else {
-        // Add new product.
-        const productData = {
-          quantity: qty,
-          name: name,
-          category: activeList,
-          purchased: false,
-          timestamp: Date.now()
-        };
-        addProductToFirestore(productData);
-      }
-      modalOverlay.style.display = 'none';
-    });
-
     // *** Real-Time Listener ***
     db.collection("products").orderBy("timestamp").onSnapshot(snapshot => {
       renderProducts(snapshot);
     });
 
-    // *** Optional: Drag-and-Drop Reordering ***
+    // *** Drag-and-Drop for "to-buy" containers (desktop & mobile) ***
     document.querySelectorAll('.to-buy').forEach(container => {
       container.addEventListener('dragover', (e) => {
         e.preventDefault();
         const draggingItem = document.querySelector('.dragging');
         const afterElement = getDragAfterElement(container, e.clientY);
-        if (afterElement == null) {
+        if (!afterElement) {
           container.appendChild(draggingItem);
         } else {
           container.insertBefore(draggingItem, afterElement);
@@ -437,6 +505,18 @@
         }
       }, { offset: Number.NEGATIVE_INFINITY }).element;
     }
+
+    // *** Image Modal for Viewing Uploaded Photo ***
+    function showImageModal(url) {
+      imageModal.innerHTML = "";
+      const img = document.createElement('img');
+      img.src = url;
+      imageModal.appendChild(img);
+      imageModalOverlay.style.display = "flex";
+    }
+    imageModalOverlay.addEventListener('click', () => {
+      imageModalOverlay.style.display = "none";
+    });
   </script>
 </body>
 </html>
