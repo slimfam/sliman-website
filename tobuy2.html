@@ -318,7 +318,7 @@
       apiKey: "AIzaSyBH0RwdCkSOQwCR8v2JKO9pliyOkKUuhBI",
       authDomain: "websliman.firebaseapp.com",
       projectId: "websliman",
-      storageBucket: "websliman.firebasestorage.app",
+      storageBucket: "websliman.appspot.com",
       messagingSenderId: "36202244653",
       appId: "1:36202244653:web:c7d9aa36b425cc63c3e6a4"
     };
@@ -447,9 +447,10 @@
       productItem.innerHTML = `
         <button class="move-btn"></button>
         <div class="product-details">${product.quantity} - ${product.name}</div>
-        ${product.imageUrl ? `<button class="image-btn" title="תצוגת תמונה">📷</button>` : ""}
-        <button class="delete-btn">X</button>
-       ;
+${product.imageUrl ? `<button class="image-btn" title="תצוגת תמונה">📷</button>` : ""}        
+<button class="delete-btn">X</button>
+        
+      `;
       // Edit on clicking product details
       productItem.querySelector('.product-details').addEventListener('click', () => {
         editingItem = productItem;
