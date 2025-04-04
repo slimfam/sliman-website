@@ -447,9 +447,9 @@
       productItem.innerHTML = `
         <button class="move-btn"></button>
         <div class="product-details">${product.quantity} - ${product.name}</div>
-        <button class="delete-btn">X</button>
         ${product.imageUrl ? `<button class="image-btn" title="תצוגת תמונה">📷</button>` : ""}
-      `;
+        <button class="delete-btn">X</button>
+       ;
       // Edit on clicking product details
       productItem.querySelector('.product-details').addEventListener('click', () => {
         editingItem = productItem;
