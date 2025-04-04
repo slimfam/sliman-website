@@ -7,6 +7,8 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+  <!-- Include Sortable.js for mobile drag support -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -22,7 +24,6 @@
       left: 0;
       width: 100%;
       background: #eee;
-      /* Add some padding to ensure buttons are not cut off */
       padding: 10px;
       display: flex;
       align-items: center;
@@ -74,9 +75,10 @@
     .list-section.active {
       display: block;
     }
-    .list-section h3 {
-      margin-top: 10px; /* push the title down so it's not hidden */
-      margin-bottom: 5px;
+    /* Remove extra space from the headings */
+    .to-buy h3, .purchased h3 {
+      margin: 0;
+      padding: 0;
     }
     /* To-buy and purchased containers */
     .to-buy, .purchased {
@@ -98,7 +100,7 @@
     }
     .product-details {
       flex-grow: 1;
-      margin: 0 10px; /* spacing on left/right of details */
+      margin: 0 10px;
       font-size: 16px;
       cursor: pointer;
     }
@@ -115,7 +117,7 @@
       color: white;
       border-radius: 50%;
     }
-    /* Circle (move) button: circular with white background and blue border, no inner text */
+    /* Circle (move) button: circular with white background and blue border */
     .move-btn {
       border: 2px solid #007bff;
       background: white;
@@ -199,7 +201,7 @@
       <!-- List for סופר -->
       <div class="list-section active" id="list-super">
         <div class="to-buy" id="toBuy-super">
-          <h3>לקנות</h3>
+          <h3>לקנו2ת</h3>
         </div>
         <div class="purchased" id="purchased-super">
           <h3>נקנו</h3>
@@ -250,7 +252,6 @@
   <!-- Firebase and App Script -->
   <script>
     // *** Firebase Setup ***
-    // Update these values with your actual Firebase project configuration:
     const firebaseConfig = {
       apiKey: "AIzaSyCEeK9YuJ-GI02GTXd3MM03QEIkujI1hG4",
       authDomain: "slimanwebsite.firebaseapp.com",
@@ -259,7 +260,6 @@
       messagingSenderId: "657484443279",
       appId: "1:657484443279:web:9acd4781f37e5c40924afa"
     };
-    // Initialize Firebase using the compat libraries:
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
@@ -412,31 +412,12 @@
       renderProducts(snapshot);
     });
 
-    // *** Optional: Drag-and-Drop Reordering ***
-    document.querySelectorAll('.to-buy').forEach(container => {
-      container.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const draggingItem = document.querySelector('.dragging');
-        const afterElement = getDragAfterElement(container, e.clientY);
-        if (afterElement == null) {
-          container.appendChild(draggingItem);
-        } else {
-          container.insertBefore(draggingItem, afterElement);
-        }
+    // *** Initialize Sortable on each "to-buy" container for mobile drag support ***
+    ['super', 'lacham', 'pharm'].forEach(category => {
+      new Sortable(document.getElementById('toBuy-' + category), {
+        animation: 150
       });
     });
-    function getDragAfterElement(container, y) {
-      const draggableElements = [...container.querySelectorAll('.product-item:not(.dragging)')];
-      return draggableElements.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        if (offset < 0 && offset > closest.offset) {
-          return { offset: offset, element: child };
-        } else {
-          return closest;
-        }
-      }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
   </script>
 </body>
 </html>
