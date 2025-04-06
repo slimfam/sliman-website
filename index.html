@@ -36,7 +36,7 @@
     .nav-buttons {
       display: flex;
       gap: 10px;
-      margin-right: 0.5cm; /* 0.5cm space from the right edge */
+      margin-right: 0.5cm;
     }
     .nav-buttons button {
       background: lightblue;
@@ -48,12 +48,12 @@
       cursor: pointer;
     }
     .nav-buttons button.active {
-      border: 5px solid Green;
+      border: 5px solid green;
     }
     /* Center the add button */
     .add-button {
       position: absolute;
-      left: 15%;
+      left: 10%;
       transform: translateX(-50%);
       font-size: 24px;
       width: 50px;
@@ -69,7 +69,7 @@
       padding-top: 90px;
       padding: 68px;
     }
-    /* List section */
+    /* List sections */
     .list-section {
       display: none;
     }
@@ -106,7 +106,7 @@
       font-size: 16px;
       cursor: pointer;
     }
-    /* Delete button: red background, white X */
+    /* Delete button */
     .delete-btn {
       border: none;
       cursor: pointer;
@@ -136,12 +136,8 @@
       height: 30px;
       cursor: pointer;
     }
-    .move-btn:hover {
-      background: #e0e0e0;
-    }
-    .delete-btn:hover {
-      opacity: 0.8;
-    }
+    .move-btn:hover { background: #e0e0e0; }
+    .delete-btn:hover { opacity: 0.8; }
     /* Modal styles */
     .modal-overlay {
       position: fixed;
@@ -171,14 +167,8 @@
       padding: 5px;
       text-align: center;
     }
-    .modal-line input {
-      width: 60px;
-    }
-    .modal-line textarea {
-      width: 90%;
-      height: 40px;
-      resize: none;
-    }
+    .modal-line input { width: 60px; }
+    .modal-line textarea { width: 90%; height: 40px; resize: none; }
     .modal-buttons {
       display: flex;
       justify-content: space-around;
@@ -190,7 +180,7 @@
       cursor: pointer;
       margin: 0 5px;
     }
-    /* Extra row for image buttons */
+    /* Extra row for image upload buttons (only for non-internet) */
     .modal-extra {
       display: flex;
       justify-content: center;
@@ -198,9 +188,7 @@
       margin-bottom: 15px;
     }
     /* Dragging style */
-    .product-item.dragging {
-      opacity: 0.5;
-    }
+    .product-item.dragging { opacity: 0.5; }
     /* Image preview modal */
     #imageModal {
       position: fixed;
@@ -239,6 +227,7 @@
       <button data-list="super" class="active">סופר</button>
       <button data-list="lacham">לחם</button>
       <button data-list="pharm">פארם</button>
+      <button data-list="internet">אינטרנט</button>
     </div>
     <button class="add-button" id="openModal">+</button>
   </header>
@@ -273,24 +262,38 @@
           <h3>נקנו</h3>
         </div>
       </div>
+      <!-- New List for אינטרנט -->
+      <div class="list-section" id="list-internet">
+        <div class="to-buy" id="toBuy-internet">
+          <h3>לקנות</h3>
+        </div>
+        <div class="purchased" id="purchased-internet">
+          <h3>נקנו</h3>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Popup Modal for Adding/Editing Product -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
-      <!-- Line 1: Quantity control -->
-      <div class="modal-line">
+      <!-- Line 1: Quantity control (visible for all) -->
+      <div class="modal-line" id="qtyLine">
         <button id="decrement">-</button>
         <input type="number" id="quantity" value="1" min="1">
         <button id="increment">+</button>
       </div>
-      <!-- Line 2: Product Name -->
-      <div class="modal-line">
-        <textarea id="productName" placeholder="שם מוצר"></textarea>
+      <!-- For non-internet items, we use one field; for internet items, we show two fields -->
+      <!-- Internet Title Field -->
+      <div class="modal-line" id="titleLine" style="display: none;">
+        <input type="text" id="titleInput" placeholder="כותרת הקישור" style="width:90%; font-size:18px; padding:5px; text-align:center;">
       </div>
-      <!-- NEW: Extra row for image upload buttons -->
-      <div class="modal-extra">
+      <!-- Common Field: For non-internet, this is product name; for internet, this is URL -->
+      <div class="modal-line" id="nameOrLinkLine">
+        <textarea id="productName" placeholder="שם מוצר" style="width:90%; resize:none;"></textarea>
+      </div>
+      <!-- Extra row for image upload buttons (only for non-internet) -->
+      <div class="modal-extra" id="imageButtons">
         <button id="galleryButton">גלריה</button>
         <button id="cameraButton">מצלמה</button>
       </div>
@@ -336,6 +339,10 @@
     const decrementButton = document.getElementById('decrement');
     const quantityInput = document.getElementById('quantity');
     const productNameInput = document.getElementById('productName');
+    const titleLine = document.getElementById('titleLine');
+    const titleInput = document.getElementById('titleInput');
+    const qtyLine = document.getElementById('qtyLine');
+    const imageButtons = document.getElementById('imageButtons');
     let editingItem = null; // holds the DOM element being edited
 
     // File inputs for images
@@ -344,7 +351,7 @@
     const galleryInput = document.getElementById('galleryInput');
     const cameraInput = document.getElementById('cameraInput');
 
-    // For image preview modal
+    // Image preview modal elements
     const imageModal = document.getElementById('imageModal');
     const previewImage = document.getElementById('previewImage');
     const closeImage = document.getElementById('closeImage');
@@ -363,6 +370,19 @@
           section.classList.remove('active');
         });
         document.getElementById('list-' + activeList).classList.add('active');
+        // Adjust modal UI based on activeList
+        if (activeList === "internet") {
+          // For internet items, show quantity, title and link fields.
+          productNameInput.placeholder = "הדבק כאן קישור (URL)";
+          titleLine.style.display = 'block';
+          qtyLine.style.display = 'block';
+          imageButtons.style.display = 'none'; // no images for internet items
+        } else {
+          productNameInput.placeholder = "שם מוצר";
+          titleLine.style.display = 'none';
+          qtyLine.style.display = 'block';
+          imageButtons.style.display = 'flex';
+        }
       });
     });
 
@@ -371,7 +391,20 @@
       editingItem = null;
       quantityInput.value = 1;
       productNameInput.value = '';
+      titleInput.value = '';
       selectedImageFile = null;  // Reset selected image
+      // Adjust modal fields based on activeList
+      if (activeList === "internet") {
+        productNameInput.placeholder = "הדבק כאן קישור (URL)";
+        titleLine.style.display = 'block';
+        qtyLine.style.display = 'block';
+        imageButtons.style.display = 'none';
+      } else {
+        productNameInput.placeholder = "שם מוצר";
+        titleLine.style.display = 'none';
+        qtyLine.style.display = 'block';
+        imageButtons.style.display = 'flex';
+      }
       modalOverlay.style.display = 'flex';
     });
     cancelButton.addEventListener('click', () => {
@@ -443,32 +476,45 @@
       productItem.draggable = true;
       productItem.dataset.id = product.id;
       productItem.dataset.category = product.category;
-      // Build inner HTML. If product.imageUrl exists, we add an image button.
+      
+      let detailsHTML = "";
+      if (product.category === "internet") {
+        // For internet items, display quantity and title as a clickable link.
+        detailsHTML = `<a href="${product.link}" target="_blank" class="product-details">${product.quantity} - ${product.title}</a>`;
+      } else {
+        detailsHTML = `<div class="product-details">${product.quantity} - ${product.name}</div>`;
+      }
+      
       productItem.innerHTML = `
         <button class="move-btn"></button>
-        <div class="product-details">${product.quantity} - ${product.name}</div>
-${product.imageUrl ? `<button class="image-btn" title="תצוגת תמונה">📷</button>` : ""}        
-<button class="delete-btn">X</button>
-        
+        ${detailsHTML}
+        ${product.imageUrl ? `<button class="image-btn" title="תצוגת תמונה">📷</button>` : ""}
+        <button class="delete-btn">X</button>
       `;
-      // Edit on clicking product details
-      productItem.querySelector('.product-details').addEventListener('click', () => {
-        editingItem = productItem;
-        const parts = productItem.querySelector('.product-details').innerText.split(' - ');
-        quantityInput.value = parts[0];
-        productNameInput.value = parts.slice(1).join(' - ');
-        modalOverlay.style.display = 'flex';
-      });
+      
+      // For non-internet items, allow editing when clicking details.
+      if (product.category !== "internet") {
+        productItem.querySelector('.product-details').addEventListener('click', () => {
+          editingItem = productItem;
+          const parts = productItem.querySelector('.product-details').innerText.split(' - ');
+          quantityInput.value = parts[0];
+          productNameInput.value = parts.slice(1).join(' - ');
+          modalOverlay.style.display = 'flex';
+        });
+      }
+      
       // Delete product
       productItem.querySelector('.delete-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         deleteProductFromFirestore(product.id);
       });
+      
       // Toggle purchased state on move button click
       productItem.querySelector('.move-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         toggleProductInFirestore(product.id, !product.purchased);
       });
+      
       // If image exists, add event listener to image button
       const imageBtn = productItem.querySelector('.image-btn');
       if (imageBtn) {
@@ -478,6 +524,7 @@ ${product.imageUrl ? `<button class="image-btn" title="תצוגת תמונה">�
           imageModal.style.display = 'flex';
         });
       }
+      
       // Drag events (for visual feedback only)
       productItem.addEventListener('dragstart', () => {
         productItem.classList.add('dragging');
@@ -485,12 +532,13 @@ ${product.imageUrl ? `<button class="image-btn" title="תצוגת תמונה">�
       productItem.addEventListener('dragend', () => {
         productItem.classList.remove('dragging');
       });
+      
       return productItem;
     }
 
     function renderProducts(snapshot) {
       // Clear each list (keep the heading)
-      ['super', 'lacham', 'pharm'].forEach(category => {
+      ['super', 'lacham', 'pharm', 'internet'].forEach(category => {
         document.getElementById('toBuy-' + category).innerHTML = "<h3>לקנות</h3>";
         document.getElementById('purchased-' + category).innerHTML = "<h3>נקנו</h3>";
       });
@@ -509,25 +557,42 @@ ${product.imageUrl ? `<button class="image-btn" title="תצוגת תמונה">�
     // *** Modal "Add/Update" Handler ***
     addProductButton.addEventListener('click', () => {
       const qty = quantityInput.value;
-      const name = productNameInput.value.trim();
-      if (name === '') {
-        alert('נא להזין שם מוצר');
+      const nameOrLink = productNameInput.value.trim();
+      if (nameOrLink === '') {
+        alert(activeList === "internet" ? "נא להזין קישור" : "נא להזין שם מוצר");
         return;
       }
-      // Prepare product data
-      const productData = {
-        quantity: qty,
-        name: name,
-        category: activeList,
-        purchased: false,
-        timestamp: Date.now()
-      };
-
-      // If editing, update existing product
+      
+      let productData = {};
+      
+      if (activeList === "internet") {
+        // For internet items, require both title and link.
+        const titleVal = titleInput.value.trim();
+        if (titleVal === "") {
+          alert("נא להזין כותרת לקישור");
+          return;
+        }
+        productData = {
+          quantity: qty,
+          title: titleVal,
+          link: nameOrLink,
+          category: activeList,
+          purchased: false,
+          timestamp: Date.now()
+        };
+      } else {
+        productData = {
+          quantity: qty,
+          name: nameOrLink,
+          category: activeList,
+          purchased: false,
+          timestamp: Date.now()
+        };
+      }
+      
       if (editingItem) {
         const id = editingItem.dataset.id;
-        // If a new image was selected, upload it and update the doc
-        if (selectedImageFile) {
+        if (activeList !== "internet" && selectedImageFile) {
           uploadImage(selectedImageFile, id, (downloadURL) => {
             if (downloadURL) {
               productData.imageUrl = downloadURL;
@@ -538,9 +603,8 @@ ${product.imageUrl ? `<button class="image-btn" title="תצוגת תמונה">�
           updateProductInFirestore(id, productData);
         }
       } else {
-        // For new product: add first then, if image selected, update with imageUrl.
         addProductToFirestore(productData, (newId) => {
-          if (selectedImageFile) {
+          if (activeList !== "internet" && selectedImageFile) {
             uploadImage(selectedImageFile, newId, (downloadURL) => {
               if (downloadURL) {
                 updateProductInFirestore(newId, { imageUrl: downloadURL });
@@ -549,6 +613,7 @@ ${product.imageUrl ? `<button class="image-btn" title="תצוגת תמונה">�
           }
         });
       }
+      
       modalOverlay.style.display = 'none';
       selectedImageFile = null;
     });
@@ -559,7 +624,7 @@ ${product.imageUrl ? `<button class="image-btn" title="תצוגת תמונה">�
     });
 
     // *** Initialize Sortable on each "to-buy" container for mobile drag support ***
-    ['super', 'lacham', 'pharm'].forEach(category => {
+    ['super', 'lacham', 'pharm', 'internet'].forEach(category => {
       new Sortable(document.getElementById('toBuy-' + category), {
         animation: 150
       });
