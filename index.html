@@ -32,7 +32,7 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       z-index: 1000;
     }
-    /* Navigation buttons (lists) */
+    /* Navigation buttons */
     .nav-buttons {
       display: flex;
       gap: 10px;
@@ -53,7 +53,7 @@
     /* Center the add button */
     .add-button {
       position: absolute;
-      left: 10%;
+      left: 15%;
       transform: translateX(-50%);
       font-size: 24px;
       width: 50px;
@@ -162,7 +162,8 @@
       margin-bottom: 15px;
       text-align: center;
     }
-    .modal-line input, .modal-line textarea {
+    .modal-line input,
+    .modal-line textarea {
       font-size: 18px;
       padding: 5px;
       text-align: center;
@@ -262,7 +263,7 @@
           <h3>נקנו</h3>
         </div>
       </div>
-      <!-- New List for אינטרנט -->
+      <!-- List for אינטרנט -->
       <div class="list-section" id="list-internet">
         <div class="to-buy" id="toBuy-internet">
           <h3>לקנות</h3>
@@ -277,18 +278,17 @@
   <!-- Popup Modal for Adding/Editing Product -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
-      <!-- Line 1: Quantity control (visible for all) -->
+      <!-- Line 1: Quantity control -->
       <div class="modal-line" id="qtyLine">
         <button id="decrement">-</button>
         <input type="number" id="quantity" value="1" min="1">
         <button id="increment">+</button>
       </div>
-      <!-- For non-internet items, we use one field; for internet items, we show two fields -->
-      <!-- Internet Title Field -->
+      <!-- For internet items, show title field -->
       <div class="modal-line" id="titleLine" style="display: none;">
         <input type="text" id="titleInput" placeholder="כותרת הקישור" style="width:90%; font-size:18px; padding:5px; text-align:center;">
       </div>
-      <!-- Common Field: For non-internet, this is product name; for internet, this is URL -->
+      <!-- Common Field: For non-internet, product name; for internet, URL -->
       <div class="modal-line" id="nameOrLinkLine">
         <textarea id="productName" placeholder="שם מוצר" style="width:90%; resize:none;"></textarea>
       </div>
@@ -366,17 +366,14 @@
         navButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         activeList = btn.getAttribute('data-list');
-        document.querySelectorAll('.list-section').forEach(section => {
-          section.classList.remove('active');
-        });
+        document.querySelectorAll('.list-section').forEach(section => section.classList.remove('active'));
         document.getElementById('list-' + activeList).classList.add('active');
         // Adjust modal UI based on activeList
         if (activeList === "internet") {
-          // For internet items, show quantity, title and link fields.
           productNameInput.placeholder = "הדבק כאן קישור (URL)";
           titleLine.style.display = 'block';
           qtyLine.style.display = 'block';
-          imageButtons.style.display = 'none'; // no images for internet items
+          imageButtons.style.display = 'none';
         } else {
           productNameInput.placeholder = "שם מוצר";
           titleLine.style.display = 'none';
@@ -392,8 +389,7 @@
       quantityInput.value = 1;
       productNameInput.value = '';
       titleInput.value = '';
-      selectedImageFile = null;  // Reset selected image
-      // Adjust modal fields based on activeList
+      selectedImageFile = null;
       if (activeList === "internet") {
         productNameInput.placeholder = "הדבק כאן קישור (URL)";
         titleLine.style.display = 'block';
@@ -439,6 +435,8 @@
 
     // *** Firestore CRUD Functions ***
     function addProductToFirestore(data, callback) {
+      // Set default order to current timestamp so new items appear at the end
+      data.order = data.timestamp;
       db.collection("products").add(data)
         .then(docRef => {
           callback(docRef.id);
@@ -479,7 +477,6 @@
       
       let detailsHTML = "";
       if (product.category === "internet") {
-        // For internet items, display quantity and title as a clickable link.
         detailsHTML = `<a href="${product.link}" target="_blank" class="product-details">${product.quantity} - ${product.title}</a>`;
       } else {
         detailsHTML = `<div class="product-details">${product.quantity} - ${product.name}</div>`;
@@ -492,7 +489,6 @@
         <button class="delete-btn">X</button>
       `;
       
-      // For non-internet items, allow editing when clicking details.
       if (product.category !== "internet") {
         productItem.querySelector('.product-details').addEventListener('click', () => {
           editingItem = productItem;
@@ -503,19 +499,16 @@
         });
       }
       
-      // Delete product
       productItem.querySelector('.delete-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         deleteProductFromFirestore(product.id);
       });
       
-      // Toggle purchased state on move button click
       productItem.querySelector('.move-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         toggleProductInFirestore(product.id, !product.purchased);
       });
       
-      // If image exists, add event listener to image button
       const imageBtn = productItem.querySelector('.image-btn');
       if (imageBtn) {
         imageBtn.addEventListener('click', (e) => {
@@ -525,7 +518,6 @@
         });
       }
       
-      // Drag events (for visual feedback only)
       productItem.addEventListener('dragstart', () => {
         productItem.classList.add('dragging');
       });
@@ -537,7 +529,6 @@
     }
 
     function renderProducts(snapshot) {
-      // Clear each list (keep the heading)
       ['super', 'lacham', 'pharm', 'internet'].forEach(category => {
         document.getElementById('toBuy-' + category).innerHTML = "<h3>לקנות</h3>";
         document.getElementById('purchased-' + category).innerHTML = "<h3>נקנו</h3>";
@@ -562,11 +553,8 @@
         alert(activeList === "internet" ? "נא להזין קישור" : "נא להזין שם מוצר");
         return;
       }
-      
       let productData = {};
-      
       if (activeList === "internet") {
-        // For internet items, require both title and link.
         const titleVal = titleInput.value.trim();
         if (titleVal === "") {
           alert("נא להזין כותרת לקישור");
@@ -613,20 +601,27 @@
           }
         });
       }
-      
       modalOverlay.style.display = 'none';
       selectedImageFile = null;
     });
 
     // *** Real-Time Listener ***
-    db.collection("products").orderBy("timestamp").onSnapshot(snapshot => {
+    db.collection("products").orderBy("order", "asc").onSnapshot(snapshot => {
       renderProducts(snapshot);
     });
 
     // *** Initialize Sortable on each "to-buy" container for mobile drag support ***
     ['super', 'lacham', 'pharm', 'internet'].forEach(category => {
       new Sortable(document.getElementById('toBuy-' + category), {
-        animation: 150
+        animation: 150,
+        onEnd: function(evt) {
+          const container = evt.to;
+          const items = container.querySelectorAll('.product-item');
+          items.forEach((item, index) => {
+            const id = item.dataset.id;
+            db.collection("products").doc(id).update({ order: index });
+          });
+        }
       });
     });
 
