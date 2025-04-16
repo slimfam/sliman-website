@@ -98,7 +98,7 @@
       min-height: 50px;
       position: relative;
     }
-    /* A small "הדבק" button added above each list heading */
+    /* "הדבק" Button */
     .paste-btn {
       font-size: 12px;
       padding: 3px 6px;
@@ -155,7 +155,7 @@
     }
     .move-btn:hover { background: #e0e0e0; }
     .delete-btn:hover { opacity: 0.8; }
-    /* Modal styles for adding/editing products */
+    /* Modal Styles (Normal Modal) */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -198,7 +198,7 @@
       cursor: pointer;
       margin: 0 5px;
     }
-    /* Extra row for image upload buttons */
+    /* Extra row for image upload buttons (Normal Modal) */
     .modal-extra {
       display: flex;
       justify-content: center;
@@ -207,7 +207,8 @@
     }
     /* Dragging style */
     .product-item.dragging { opacity: 0.5; }
-    /* Paste Modal – full screen popup for pasting products */
+    
+    /* Paste Modal – Full Screen Popup for Bulk Pasting Products */
     .paste-modal-overlay {
       position: fixed;
       top: 0;
@@ -237,7 +238,7 @@
       text-align: center;
       font-size: 20px;
     }
-    /* The paste input section: a large textarea */
+    /* Large TextArea to paste products */
     #pasteInputSection textarea {
       width: 100%;
       height: 70vh;
@@ -251,13 +252,13 @@
       font-size: 16px;
       cursor: pointer;
     }
-    /* The processed paste rows section will scroll if needed */
+    /* Processed Paste Rows (scrollable if needed) */
     #pasteRowsSection {
       flex: 1;
       overflow-y: auto;
       margin-bottom: 10px;
     }
-    /* Each paste row with title and quantity controls */
+    /* Each Paste Row with title and quantity controls */
     .paste-row {
       display: flex;
       align-items: center;
@@ -267,6 +268,7 @@
       padding: 5px;
       box-sizing: border-box;
     }
+    /* Editable title for paste rows */
     .paste-title {
       flex-grow: 1;
       border: none;
@@ -275,10 +277,12 @@
       margin-right: 10px;
       background: transparent;
     }
+    /* For quantity controls in paste rows, horizontal layout */
     .paste-qty-col {
       display: flex;
-      flex-direction: row;
+      flex-direction: row;  /* Changed to row */
       align-items: center;
+      gap: 5px;  /* Optional gap between controls */
     }
     .paste-qty-col button {
       border: none;
@@ -288,18 +292,16 @@
       height: 30px;
       border-radius: 50%;
       cursor: pointer;
-      margin: 0 5px;
       font-size: 16px;
       line-height: 28px;
       text-align: center;
     }
     .paste-qty-number {
-  font-size: 16px;
-  margin: 0 5px; /* 5px vertical and 10px horizontal margin */
-  padding: 5px;
-  display: inline-block;
-}
-
+      font-size: 16px;
+      margin: 0 5px;
+      padding: 5px;
+      display: inline-block;
+    }
     .paste-modal-buttons {
       display: flex;
       justify-content: space-around;
@@ -309,7 +311,8 @@
       font-size: 16px;
       cursor: pointer;
     }
-    /* Image Modal Styles */
+    
+    /* Image Preview Modal */
     #imageModal {
       position: fixed;
       top: 0;
@@ -358,7 +361,7 @@
       <!-- List for סופר -->
       <div class="list-section active" id="list-super">
         <div class="to-buy" id="toBuy-super">
-          <!-- Heading plus Paste button will be added by JS -->
+          <!-- Heading plus paste button gets added by JS -->
         </div>
         <div class="purchased" id="purchased-super">
           <h3>נקנו</h3>
@@ -381,7 +384,7 @@
       <!-- List for אינטרנט -->
       <div class="list-section" id="list-internet">
         <div class="to-buy" id="toBuy-internet">
-          <!-- Heading plus Paste button will be added by JS -->
+          <!-- Heading plus paste button gets added by JS -->
         </div>
       </div>
     </div>
@@ -431,7 +434,7 @@
       </div>
       <!-- Processed rows section (will scroll if content exceeds available space) -->
       <div id="pasteRowsSection" style="display:none;"></div>
-      <!-- Bottom action buttons (stays visible) -->
+      <!-- Bottom action buttons (always visible) -->
       <div class="paste-modal-buttons">
         <button id="pasteCancel">ביטול</button>
         <button id="pasteConfirm">אישור</button>
@@ -459,7 +462,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const storage = firebase.storage();
-
+    
     // *** DOM Elements ***
     let activeList = "super";
     const modalOverlay = document.getElementById('modalOverlay');
@@ -474,19 +477,19 @@
     const linkInputContainer = document.getElementById('linkInputContainer');
     const imageButtonsContainer = document.getElementById('imageButtonsContainer');
     let editingItem = null;  // For normal modal editing
-
-    // File inputs for image selection (normal modal)
+    
+    // File inputs for image selection (Normal Modal)
     const galleryButton = document.getElementById('galleryButton');
     const cameraButton = document.getElementById('cameraButton');
     const galleryInput = document.getElementById('galleryInput');
     const cameraInput = document.getElementById('cameraInput');
     let selectedImageFile = null;
-
+    
     // Image Preview Modal
     const imageModal = document.getElementById('imageModal');
     const previewImage = document.getElementById('previewImage');
     const closeImage = document.getElementById('closeImage');
-
+    
     // Paste Modal Elements
     const pasteModal = document.getElementById('pasteModal');
     const pasteInputSection = document.getElementById('pasteInputSection');
@@ -495,7 +498,7 @@
     const pasteRowsSection = document.getElementById('pasteRowsSection');
     const pasteCancel = document.getElementById('pasteCancel');
     const pasteConfirm = document.getElementById('pasteConfirm');
-
+    
     // *** Navigation Buttons ***
     const navButtons = document.querySelectorAll('.nav-buttons button');
     navButtons.forEach(btn => {
@@ -503,7 +506,6 @@
         navButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         activeList = btn.getAttribute('data-list');
-        // Show/hide link input and image buttons accordingly
         if(activeList === "internet"){
           linkInputContainer.style.display = 'block';
           imageButtonsContainer.style.display = 'none';
@@ -511,12 +513,11 @@
           linkInputContainer.style.display = 'none';
           imageButtonsContainer.style.display = 'flex';
         }
-        // Show the corresponding list section
         document.querySelectorAll('.list-section').forEach(section => section.classList.remove('active'));
         document.getElementById('list-' + activeList).classList.add('active');
       });
     });
-
+    
     // *** Modal Controls (Normal Modal) ***
     openModalButton.addEventListener('click', () => {
       editingItem = null;
@@ -539,20 +540,24 @@
       const currentVal = parseInt(quantityInput.value);
       if(currentVal > 1) quantityInput.value = currentVal - 1;
     });
-
+    
     // *** File Input Handlers (Normal Modal) ***
     galleryButton.addEventListener('click', () => { galleryInput.click(); });
     cameraButton.addEventListener('click', () => { cameraInput.click(); });
     galleryInput.addEventListener('change', (e) => {
-      if(e.target.files && e.target.files[0]) { selectedImageFile = e.target.files[0]; }
+      if(e.target.files && e.target.files[0]) {
+        selectedImageFile = e.target.files[0];
+      }
     });
     cameraInput.addEventListener('change', (e) => {
-      if(e.target.files && e.target.files[0]) { selectedImageFile = e.target.files[0]; }
+      if(e.target.files && e.target.files[0]) {
+        selectedImageFile = e.target.files[0];
+      }
     });
-
+    
     // *** Firestore CRUD Functions ***
     function addProductToFirestore(data, callback) {
-      // For new products, also store an "order" field (initially set to timestamp)
+      // For new products, also store an "order" field (initially set to current time)
       data.order = data.order || Date.now();
       db.collection("products").add(data)
         .then(docRef => { callback(docRef.id); });
@@ -566,7 +571,7 @@
     function toggleProductInFirestore(id, newPurchased) {
       db.collection("products").doc(id).update({ purchased: newPurchased });
     }
-
+    
     // *** Upload Image Function ***
     function uploadImage(file, productId, onComplete) {
       const storageRef = storage.ref();
@@ -579,7 +584,7 @@
           onComplete(null);
         });
     }
-
+    
     // *** Render Functions ***
     function createProductElement(product) {
       const productItem = document.createElement('div');
@@ -587,7 +592,7 @@
       productItem.draggable = true;
       productItem.dataset.id = product.id;
       productItem.dataset.category = product.category;
-      // Build inner HTML differently for "internet" category versus regular products.
+      
       if(product.category === "internet"){
         productItem.innerHTML = `
           <div class="product-details">${product.quantity} - ${product.name}</div>
@@ -602,7 +607,7 @@
           <button class="delete-btn">X</button>
         `;
       }
-      // For non-internet products, attach editing on clicking details.
+      
       if(product.category !== "internet"){
         productItem.querySelector('.product-details').addEventListener('click', () => {
           editingItem = productItem;
@@ -612,19 +617,19 @@
           modalOverlay.style.display = 'flex';
         });
       }
-      // Delete button handler.
+      
       productItem.querySelector('.delete-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         deleteProductFromFirestore(product.id);
       });
-      // For non-internet products, attach move button handler.
+      
       if(product.category !== "internet"){
         productItem.querySelector('.move-btn').addEventListener('click', (e) => {
           e.stopPropagation();
           toggleProductInFirestore(product.id, !product.purchased);
         });
       }
-      // If an image exists, hook up the image button.
+      
       const imageBtn = productItem.querySelector('.image-btn');
       if(imageBtn){
         imageBtn.addEventListener('click', (e) => {
@@ -633,46 +638,43 @@
           imageModal.style.display = 'flex';
         });
       }
-      // Drag events for visual feedback.
+      
       productItem.addEventListener('dragstart', () => { productItem.classList.add('dragging'); });
       productItem.addEventListener('dragend', () => { productItem.classList.remove('dragging'); });
+      
       return productItem;
     }
-
+    
     function renderProducts(snapshot) {
-      // For each list, set up heading and a "paste" button
       ['super', 'lacham', 'pharm'].forEach(category => {
         document.getElementById('toBuy-' + category).innerHTML = `<h3>לקנות</h3><button class="paste-btn">הדבק</button>`;
         document.getElementById('purchased-' + category).innerHTML = "<h3>נקנו</h3>";
       });
       document.getElementById('toBuy-internet').innerHTML = `<h3>קישורים</h3><button class="paste-btn">הדבק</button>`;
       
-      // Add event listeners for each newly added paste button.
+      // Attach event listeners for all paste buttons
       document.querySelectorAll('.paste-btn').forEach(btn => btn.addEventListener('click', openPasteModal));
-
+      
       snapshot.forEach(doc => {
         let product = doc.data();
         product.id = doc.id;
         const element = createProductElement(product);
         if(product.category === "internet"){
           document.getElementById('toBuy-internet').appendChild(element);
-        }
-        else if(product.purchased){
+        } else if(product.purchased) {
           document.getElementById('purchased-' + product.category).appendChild(element);
-        }
-        else{
+        } else {
           document.getElementById('toBuy-' + product.category).appendChild(element);
         }
       });
     }
-
-    // Change the query to order by the persisted "order" field.
-    db.collection("products").orderBy("timestamp").onSnapshot(snapshot => {
-  renderProducts(snapshot);
-});
-
-
-    // *** Modal "Add/Update" Handler (Normal Modal) ***
+    
+    // Use the persisted "order" field now instead of "timestamp"
+    db.collection("products").orderBy("order").onSnapshot(snapshot => {
+      renderProducts(snapshot);
+    });
+    
+    // *** Normal Modal "Add/Update" Handler ***
     addProductButton.addEventListener('click', () => {
       const qty = quantityInput.value;
       const name = productNameInput.value.trim();
@@ -687,7 +689,6 @@
         purchased: false,
         timestamp: Date.now()
       };
-      // Also set the order field for new items.
       if(!editingItem){
         productData.order = Date.now();
       }
@@ -725,7 +726,7 @@
       modalOverlay.style.display = "none";
       selectedImageFile = null;
     });
-
+    
     // *** Initialize Sortable for Drag-and-Drop with Persistent Order ***
     ['super','lacham','pharm','internet'].forEach(category => {
       const container = document.getElementById('toBuy-' + category);
@@ -733,7 +734,7 @@
         new Sortable(container, {
           animation: 150,
           onEnd: function(evt) {
-            // Update the order field in Firestore based on the new order in the container.
+            // When drag ends, update the order for every product in this container.
             const items = container.querySelectorAll('.product-item');
             items.forEach((item, index) => {
               updateProductInFirestore(item.dataset.id, { order: index });
@@ -742,13 +743,13 @@
         });
       }
     });
-
+    
     // *** Image Modal Controls ***
     closeImage.addEventListener('click', () => { imageModal.style.display = 'none'; });
     imageModal.addEventListener('click', (e) => {
       if(e.target === imageModal) { imageModal.style.display = 'none'; }
     });
-
+    
     // *** Paste Modal Functionality ***
     function openPasteModal() {
       pasteModal.style.display = "flex";
@@ -768,20 +769,18 @@
         return;
       }
       pasteRowsSection.innerHTML = "";
-      // Create a row for each pasted line with an editable title and quantity controls.
+      // For each pasted line, create a row with quantity controls and a title input.
       lines.forEach(line => {
         const row = document.createElement("div");
         row.className = "paste-row";
         row.innerHTML = `
-  <div class="paste-qty-col">
-    <button class="paste-plus">+</button>
-    <span class="paste-qty-number">1</span>
-    <button class="paste-minus">-</button>
-  </div>
-  <input type="text" class="paste-title" value="${line.trim()}" placeholder="שם מוצר">
-</div>
-`;
-
+          <div class="paste-qty-col">
+            <button class="paste-plus">+</button>
+            <span class="paste-qty-number">1</span>
+            <button class="paste-minus">-</button>
+          </div>
+          <input type="text" class="paste-title" value="${line.trim()}" placeholder="שם מוצר">
+        `;
         const plusBtn = row.querySelector('.paste-plus');
         const minusBtn = row.querySelector('.paste-minus');
         const qtySpan = row.querySelector('.paste-qty-number');
@@ -815,7 +814,7 @@
             category: activeList,
             purchased: false,
             timestamp: Date.now(),
-            order: Date.now()  // initial order
+            order: Date.now()
           };
           addProductToFirestore(productData, () => {});
         }
