@@ -5,16 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>רשימת קניות</title>
   
-  <!-- Web App Manifest -->
+  <!-- Web App Manifest and Icons -->
   <link rel="manifest" href="manifest.json">
-  <!-- Apple Touch Icon -->
   <link rel="apple-touch-icon" href="images/apple-touch-icon.ico">
-  <!-- Favicon for browsers -->
   <link rel="icon" type="image/png" sizes="512x512" href="images/icon-512.ico">
   <meta name="theme-color" content="#ffffff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
+  
   <!-- Firebase SDKs (app, firestore, and storage) -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -23,6 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
   
   <style>
+    /* Overall Styles */
     body {
       font-family: sans-serif;
       margin: 0;
@@ -44,11 +43,10 @@
       box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       z-index: 1000;
     }
-    /* Navigation buttons (lists) */
     .nav-buttons {
       display: flex;
       gap: 10px;
-      margin-right: 0.5cm; /* 0.5cm space from the right edge */
+      margin-right: 0.5cm;
     }
     .nav-buttons button {
       background: lightblue;
@@ -60,9 +58,9 @@
       cursor: pointer;
     }
     .nav-buttons button.active {
-      border: 5px solid Green;
+      border: 5px solid green;
     }
-    /* Center the add button */
+    /* Add button */
     .add-button {
       position: absolute;
       left: 15%;
@@ -76,32 +74,41 @@
       color: white;
       cursor: pointer;
     }
-    /* Main content container */
+    /* Main Content */
     .content {
       padding-top: 90px;
       padding: 68px;
     }
-    /* List section */
     .list-section {
       display: none;
     }
     .list-section.active {
       display: block;
     }
-    /* Remove extra space from headings */
     .to-buy h3, .purchased h3 {
       margin: 0;
       padding: 0;
     }
-    /* To-buy and purchased containers */
     .to-buy, .purchased {
       margin-bottom: 20px;
       background: #fff;
       padding: 10px;
       border-radius: 8px;
       min-height: 50px;
+      position: relative;
     }
-    /* Product item style */
+    /* Paste button that appears above list headings */
+    .paste-btn {
+      font-size: 12px;
+      padding: 3px 6px;
+      margin-bottom: 5px;
+      border: none;
+      background: #28a745;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    /* Product Item */
     .product-item {
       background: #f7f7f7;
       border: 1px solid #ddd;
@@ -118,7 +125,6 @@
       font-size: 16px;
       cursor: pointer;
     }
-    /* Delete button: red background, white X */
     .delete-btn {
       border: none;
       cursor: pointer;
@@ -131,7 +137,6 @@
       color: white;
       border-radius: 50%;
     }
-    /* Image button (camera icon) */
     .image-btn {
       border: none;
       cursor: pointer;
@@ -139,7 +144,6 @@
       font-size: 18px;
       margin-right: 5px;
     }
-    /* Move button */
     .move-btn {
       border: 2px solid #007bff;
       background: white;
@@ -148,13 +152,9 @@
       height: 30px;
       cursor: pointer;
     }
-    .move-btn:hover {
-      background: #e0e0e0;
-    }
-    .delete-btn:hover {
-      opacity: 0.8;
-    }
-    /* Modal styles */
+    .move-btn:hover { background: #e0e0e0; }
+    .delete-btn:hover { opacity: 0.8; }
+    /* Modal styles for adding/editing products */
     .modal-overlay {
       position: fixed;
       top: 0;
@@ -178,19 +178,14 @@
       margin-bottom: 15px;
       text-align: center;
     }
-    .modal-line input, .modal-line textarea {
+    .modal-line input,
+    .modal-line textarea {
       font-size: 18px;
       padding: 5px;
       text-align: center;
     }
-    .modal-line input {
-      width: 60px;
-    }
-    .modal-line textarea {
-      width: 90%;
-      height: 40px;
-      resize: none;
-    }
+    .modal-line input { width: 60px; }
+    .modal-line textarea { width: 90%; height: 40px; resize: none; }
     .modal-buttons {
       display: flex;
       justify-content: space-around;
@@ -202,7 +197,7 @@
       cursor: pointer;
       margin: 0 5px;
     }
-    /* Extra row for image buttons */
+    /* Extra row for image upload (only for products, not internet) */
     .modal-extra {
       display: flex;
       justify-content: center;
@@ -210,10 +205,109 @@
       margin-bottom: 15px;
     }
     /* Dragging style */
-    .product-item.dragging {
-      opacity: 0.5;
+    .product-item.dragging { opacity: 0.5; }
+    /* Paste Modal – full screen modal for pasting items */
+    .paste-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      z-index: 1200;
+      padding: 20px;
+      box-sizing: border-box;
     }
-    /* Image preview modal */
+    .paste-modal {
+      width: 95vw;
+      height: 90vh;
+      background: #fff;
+      border-radius: 8px;
+      padding: 15px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+    .paste-modal h2 {
+      margin: 0 0 10px 0;
+      text-align: center;
+      font-size: 20px;
+    }
+    /* Initially show a large textarea for paste input */
+    #pasteInputSection {
+      display: block;
+    }
+    #pasteRowsSection {
+      display: none;
+    }
+    #pasteInputSection textarea {
+      width: 100%;
+      height: 70vh;
+      font-size: 16px;
+      padding: 10px;
+      box-sizing: border-box;
+    }
+    #processPaste {
+      margin: 10px 0;
+      padding: 8px 15px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    /* Each row from pasted text */
+    .paste-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      background: #fff;
+      border-radius: 4px;
+      padding: 5px;
+      box-sizing: border-box;
+    }
+    .paste-title {
+      flex-grow: 1;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      margin-right: 10px;
+      background: transparent;
+    }
+    .paste-qty-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .paste-qty-col button {
+      border: none;
+      background: #007bff;
+      color: #fff;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+      margin: 2px 0;
+      font-size: 16px;
+      line-height: 28px;
+      text-align: center;
+    }
+    .paste-qty-number {
+      font-size: 16px;
+      margin: 2px 0;
+    }
+    /* Bottom buttons in paste modal */
+    .paste-modal-buttons {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 10px;
+    }
+    .paste-modal-buttons button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    /* Image Modal Styles */
     #imageModal {
       position: fixed;
       top: 0;
@@ -251,7 +345,6 @@
       <button data-list="super" class="active">סופר</button>
       <button data-list="lacham">לחם</button>
       <button data-list="pharm">פארם</button>
-      <!-- NEW: Internet button -->
       <button data-list="internet">אינטרנט</button>
     </div>
     <button class="add-button" id="openModal">+</button>
@@ -263,7 +356,7 @@
       <!-- List for סופר -->
       <div class="list-section active" id="list-super">
         <div class="to-buy" id="toBuy-super">
-          <h3>לקנות</h3>
+          <!-- The paste button will be added by JavaScript -->
         </div>
         <div class="purchased" id="purchased-super">
           <h3>נקנו</h3>
@@ -271,32 +364,28 @@
       </div>
       <!-- List for לחם -->
       <div class="list-section" id="list-lacham">
-        <div class="to-buy" id="toBuy-lacham">
-          <h3>לקנות</h3>
-        </div>
+        <div class="to-buy" id="toBuy-lacham"></div>
         <div class="purchased" id="purchased-lacham">
           <h3>נקנו</h3>
         </div>
       </div>
       <!-- List for פארם -->
       <div class="list-section" id="list-pharm">
-        <div class="to-buy" id="toBuy-pharm">
-          <h3>לקנות</h3>
-        </div>
+        <div class="to-buy" id="toBuy-pharm"></div>
         <div class="purchased" id="purchased-pharm">
           <h3>נקנו</h3>
         </div>
       </div>
-      <!-- NEW: List for אינטרנט -->
+      <!-- List for אינטרנט -->
       <div class="list-section" id="list-internet">
         <div class="to-buy" id="toBuy-internet">
-          <h3>קישורים</h3>
+          <!-- Paste button will be added -->
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Popup Modal for Adding/Editing Product -->
+  <!-- Modal for Adding/Editing Product (Normal Modal) -->
   <div class="modal-overlay" id="modalOverlay">
     <div class="modal">
       <!-- Line 1: Quantity control -->
@@ -305,15 +394,15 @@
         <input type="number" id="quantity" value="1" min="1">
         <button id="increment">+</button>
       </div>
-      <!-- Line 2: Product Name or Title (for internet links) -->
+      <!-- Line 2: Product Name / Title -->
       <div class="modal-line">
         <textarea id="productName" placeholder="שם מוצר/כותרת"></textarea>
       </div>
-      <!-- NEW: For Internet links: extra input for URL -->
+      <!-- For internet links: extra input for URL -->
       <div class="modal-line" id="linkInputContainer" style="display:none;">
         <input type="url" id="productLink" placeholder="הדבק קישור כאן" style="width:90%; font-size:16px; padding:5px; text-align:center;">
       </div>
-      <!-- NEW: Extra row for image upload buttons (only for products, not for internet links) -->
+      <!-- Extra row for image upload (only for products, not for internet) -->
       <div class="modal-extra" id="imageButtonsContainer">
         <button id="galleryButton">גלריה</button>
         <button id="cameraButton">מצלמה</button>
@@ -329,7 +418,27 @@
     </div>
   </div>
 
-  <!-- Popup Modal for Image Preview -->
+  <!-- Paste Modal for Pasting Many Products -->
+  <div class="paste-modal-overlay" id="pasteModal">
+    <div class="paste-modal">
+      <h2>הדבק פריטים</h2>
+      <!-- Initial paste input section -->
+      <div id="pasteInputSection">
+        <textarea id="pasteArea" placeholder="הדבק כאן טקסט, כל שורה מייצגת מוצר" style="resize:vertical;"></textarea>
+        <button id="processPaste">עבד</button>
+      </div>
+      <!-- Generated rows section (initially hidden) -->
+      <div id="pasteRowsSection" style="display:none;">
+        <!-- Rows will be dynamically generated here -->
+      </div>
+      <div class="paste-modal-buttons">
+        <button id="pasteCancel">ביטול</button>
+        <button id="pasteConfirm">אישור</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Image Preview -->
   <div class="modal-overlay" id="imageModal">
     <button class="close-image" id="closeImage">&times;</button>
     <img id="previewImage" src="" alt="Product Image">
@@ -342,7 +451,7 @@
       apiKey: "AIzaSyBH0RwdCkSOQwCR8v2JKO9pliyOkKUuhBI",
       authDomain: "websliman.firebaseapp.com",
       projectId: "websliman",
-      storageBucket: "websliman.firebasestorage.app",
+      storageBucket: "websliman.appspot.com",
       messagingSenderId: "36202244653",
       appId: "1:36202244653:web:c7d9aa36b425cc63c3e6a4"
     };
@@ -351,7 +460,7 @@
     const storage = firebase.storage();
 
     // *** DOM Elements ***
-    let activeList = "super"; // default active category
+    let activeList = "super";
     const modalOverlay = document.getElementById('modalOverlay');
     const openModalButton = document.getElementById('openModal');
     const cancelButton = document.getElementById('cancel');
@@ -363,20 +472,29 @@
     const productLinkInput = document.getElementById('productLink');
     const linkInputContainer = document.getElementById('linkInputContainer');
     const imageButtonsContainer = document.getElementById('imageButtonsContainer');
-    let editingItem = null; // holds the DOM element being edited
+    let editingItem = null;
 
-    // File inputs for images
+    // File inputs (normal modal)
     const galleryButton = document.getElementById('galleryButton');
     const cameraButton = document.getElementById('cameraButton');
     const galleryInput = document.getElementById('galleryInput');
     const cameraInput = document.getElementById('cameraInput');
 
-    // For image preview modal
+    // Image preview modal
     const imageModal = document.getElementById('imageModal');
     const previewImage = document.getElementById('previewImage');
     const closeImage = document.getElementById('closeImage');
 
-    // Variable to hold the selected image file
+    // Paste Modal Elements
+    const pasteModal = document.getElementById('pasteModal');
+    const pasteInputSection = document.getElementById('pasteInputSection');
+    const pasteArea = document.getElementById('pasteArea');
+    const processPaste = document.getElementById('processPaste');
+    const pasteRowsSection = document.getElementById('pasteRowsSection');
+    const pasteCancel = document.getElementById('pasteCancel');
+    const pasteConfirm = document.getElementById('pasteConfirm');
+
+    // To hold the selected image file (normal modal)
     let selectedImageFile = null;
 
     // *** Navigation Buttons ***
@@ -399,7 +517,7 @@
       });
     });
 
-    // *** Modal Controls ***
+    // *** Modal Controls for Normal Modal ***
     openModalButton.addEventListener('click', () => {
       editingItem = null;
       quantityInput.value = 1;
@@ -407,7 +525,7 @@
       if(activeList === "internet") {
         productLinkInput.value = '';
       }
-      selectedImageFile = null;  // Reset selected image
+      selectedImageFile = null;
       modalOverlay.style.display = 'flex';
     });
     cancelButton.addEventListener('click', () => {
@@ -419,10 +537,10 @@
     });
     decrementButton.addEventListener('click', () => {
       const currentVal = parseInt(quantityInput.value);
-      if (currentVal > 1) quantityInput.value = currentVal - 1;
+      if(currentVal > 1) quantityInput.value = currentVal - 1;
     });
 
-    // *** File Input Handlers ***
+    // *** File Input Handlers (Normal Modal) ***
     galleryButton.addEventListener('click', () => {
       galleryInput.click();
     });
@@ -430,12 +548,12 @@
       cameraInput.click();
     });
     galleryInput.addEventListener('change', (e) => {
-      if(e.target.files && e.target.files[0]) {
+      if(e.target.files && e.target.files[0]){
         selectedImageFile = e.target.files[0];
       }
     });
     cameraInput.addEventListener('change', (e) => {
-      if(e.target.files && e.target.files[0]) {
+      if(e.target.files && e.target.files[0]){
         selectedImageFile = e.target.files[0];
       }
     });
@@ -443,9 +561,7 @@
     // *** Firestore CRUD Functions ***
     function addProductToFirestore(data, callback) {
       db.collection("products").add(data)
-        .then(docRef => {
-          callback(docRef.id);
-        });
+        .then(docRef => callback(docRef.id));
     }
     function updateProductInFirestore(id, data) {
       db.collection("products").doc(id).update(data);
@@ -457,15 +573,13 @@
       db.collection("products").doc(id).update({ purchased: newPurchased });
     }
 
-    // *** Function to upload image to Firebase Storage ***
+    // *** Upload Image Function ***
     function uploadImage(file, productId, onComplete) {
       const storageRef = storage.ref();
       const fileRef = storageRef.child('product_images/' + productId + '_' + Date.now() + '_' + file.name);
       fileRef.put(file)
         .then(snapshot => snapshot.ref.getDownloadURL())
-        .then(downloadURL => {
-          onComplete(downloadURL);
-        })
+        .then(downloadURL => onComplete(downloadURL))
         .catch(error => {
           console.error("Image upload error:", error);
           onComplete(null);
@@ -479,8 +593,7 @@
       productItem.draggable = true;
       productItem.dataset.id = product.id;
       productItem.dataset.category = product.category;
-      // Build inner HTML. For internet links, show title and link indicator.
-      if(product.category === "internet") {
+      if(product.category === "internet"){
         productItem.innerHTML = `
           <div class="product-details">${product.quantity} - ${product.name}</div>
           <a href="${product.link}" target="_blank" style="text-decoration:none; font-size:16px;">🔗</a>
@@ -494,8 +607,7 @@
           <button class="delete-btn">X</button>
         `;
       }
-      // Edit on clicking product details (not for internet links)
-      if(product.category !== "internet") {
+      if(product.category !== "internet"){
         productItem.querySelector('.product-details').addEventListener('click', () => {
           editingItem = productItem;
           const parts = productItem.querySelector('.product-details').innerText.split(' - ');
@@ -504,28 +616,24 @@
           modalOverlay.style.display = 'flex';
         });
       }
-      // Delete product
       productItem.querySelector('.delete-btn').addEventListener('click', (e) => {
         e.stopPropagation();
         deleteProductFromFirestore(product.id);
       });
-      // Toggle purchased state on move button click (not for internet links)
-      if(product.category !== "internet") {
+      if(product.category !== "internet"){
         productItem.querySelector('.move-btn').addEventListener('click', (e) => {
           e.stopPropagation();
           toggleProductInFirestore(product.id, !product.purchased);
         });
       }
-      // If image exists, add event listener to image button
       const imageBtn = productItem.querySelector('.image-btn');
-      if (imageBtn) {
+      if(imageBtn){
         imageBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           previewImage.src = product.imageUrl;
           imageModal.style.display = 'flex';
         });
       }
-      // Drag events (for visual feedback only)
       productItem.addEventListener('dragstart', () => {
         productItem.classList.add('dragging');
       });
@@ -536,15 +644,12 @@
     }
 
     function renderProducts(snapshot) {
-      // Clear each list (keep the heading)
-      ['super', 'lacham', 'pharm', 'internet'].forEach(category => {
-        if(category === "internet"){
-          document.getElementById('toBuy-' + category).innerHTML = "<h3>קישורים</h3>";
-        } else {
-          document.getElementById('toBuy-' + category).innerHTML = "<h3>לקנות</h3>";
-          document.getElementById('purchased-' + category).innerHTML = "<h3>נקנו</h3>";
-        }
+      ['super','lacham','pharm'].forEach(category => {
+        document.getElementById('toBuy-' + category).innerHTML = `<h3>לקנות</h3><button class="paste-btn">הדבק</button>`;
+        document.getElementById('purchased-' + category).innerHTML = "<h3>נקנו</h3>";
       });
+      document.getElementById('toBuy-internet').innerHTML = `<h3>קישורים</h3><button class="paste-btn">הדבק</button>`;
+      document.querySelectorAll('.paste-btn').forEach(btn => btn.addEventListener('click', openPasteModal));
       snapshot.forEach(doc => {
         let product = doc.data();
         product.id = doc.id;
@@ -552,20 +657,21 @@
         if(product.category === "internet"){
           document.getElementById('toBuy-internet').appendChild(element);
         }
-        else if (product.purchased) {
+        else if(product.purchased){
           document.getElementById('purchased-' + product.category).appendChild(element);
-        } else {
+        }
+        else{
           document.getElementById('toBuy-' + product.category).appendChild(element);
         }
       });
     }
 
-    // *** Modal "Add/Update" Handler ***
+    // *** Handler for Normal Modal "Add/Update" ***
     addProductButton.addEventListener('click', () => {
       const qty = quantityInput.value;
       const name = productNameInput.value.trim();
-      if (name === '') {
-        alert('נא להזין שם מוצר/כותרת');
+      if(name === ""){
+        alert("נא להזין שם מוצר/כותרת");
         return;
       }
       let productData = {
@@ -575,21 +681,19 @@
         purchased: false,
         timestamp: Date.now()
       };
-      // For internet links, add the URL field
       if(activeList === "internet"){
         const link = productLinkInput.value.trim();
-        if(link === ''){
-          alert('נא להזין קישור');
+        if(link === ""){
+          alert("נא להזין קישור");
           return;
         }
         productData.link = link;
       }
-      // If editing, update existing product
-      if (editingItem) {
+      if(editingItem){
         const id = editingItem.dataset.id;
-        if (activeList !== "internet" && selectedImageFile) {
+        if(activeList !== "internet" && selectedImageFile){
           uploadImage(selectedImageFile, id, (downloadURL) => {
-            if (downloadURL) {
+            if(downloadURL){
               productData.imageUrl = downloadURL;
             }
             updateProductInFirestore(id, productData);
@@ -598,18 +702,17 @@
           updateProductInFirestore(id, productData);
         }
       } else {
-        // For new product: add first then, if image selected and not internet, update with imageUrl.
         addProductToFirestore(productData, (newId) => {
-          if(activeList !== "internet" && selectedImageFile) {
+          if(activeList !== "internet" && selectedImageFile){
             uploadImage(selectedImageFile, newId, (downloadURL) => {
-              if (downloadURL) {
+              if(downloadURL){
                 updateProductInFirestore(newId, { imageUrl: downloadURL });
               }
             });
           }
         });
       }
-      modalOverlay.style.display = 'none';
+      modalOverlay.style.display = "none";
       selectedImageFile = null;
     });
 
@@ -618,17 +721,15 @@
       renderProducts(snapshot);
     });
 
-    // *** Initialize Sortable on each "to-buy" container for mobile drag support ***
-    ['super', 'lacham', 'pharm', 'internet'].forEach(category => {
+    // *** Initialize Sortable for each "to-buy" container ***
+    ['super','lacham','pharm','internet'].forEach(category => {
       const container = document.getElementById('toBuy-' + category);
       if(container){
         new Sortable(container, {
           animation: 150,
-          onEnd: function (evt) {
-            // Here you would update the order in Firestore.
-            // For example, you could save an "order" field for each document.
-            // This is a simplified placeholder function.
-            console.log("Drag ended, update order if needed.");
+          onEnd: function(evt) {
+            console.log("Drag ended in " + category + ". Persist order if needed.");
+            // In a full solution, update an 'order' field in Firestore for each doc.
           }
         });
       }
@@ -639,9 +740,90 @@
       imageModal.style.display = 'none';
     });
     imageModal.addEventListener('click', (e) => {
-      if(e.target === imageModal) {
+      if(e.target === imageModal){
         imageModal.style.display = 'none';
       }
+    });
+
+    // *** Paste Modal Functionality ***
+    // Open Paste Modal
+    function openPasteModal() {
+      pasteModal.style.display = "flex";
+      // Show the text area section and hide the rows section
+      pasteInputSection.style.display = "block";
+      pasteRowsSection.style.display = "none";
+      pasteArea.value = ""; // clear previous content
+    }
+
+    // Process pasted text into rows
+    processPaste.addEventListener('click', () => {
+      const text = pasteArea.value;
+      if(text.trim() === ""){
+        alert("נא להזין טקסט עם שורות מופרדות");
+        return;
+      }
+      const lines = text.split(/\r?\n/).filter(line => line.trim() !== "");
+      if(lines.length === 0){
+        alert("לא נמצאו פריטים");
+        return;
+      }
+      pasteRowsSection.innerHTML = "";
+      // For each line, create a row with an input and quantity controls
+      lines.forEach(line => {
+        const row = document.createElement("div");
+        row.className = "paste-row";
+        row.innerHTML = `
+         
+          
+            <span class="paste-qty-number">1</span>
+            <button class="paste-plus">^</button>
+            <button class="paste-minus">v</button>
+          </div>
+           <input type="text" class="paste-title" value="${line.trim()}" placeholder="שם מוצר">
+        `;
+        const plusBtn = row.querySelector('.paste-plus');
+        const minusBtn = row.querySelector('.paste-minus');
+        const qtySpan = row.querySelector('.paste-qty-number');
+        plusBtn.addEventListener('click', () => {
+          let val = parseInt(qtySpan.textContent);
+          qtySpan.textContent = val + 1;
+        });
+        minusBtn.addEventListener('click', () => {
+          let val = parseInt(qtySpan.textContent);
+          if(val > 1) qtySpan.textContent = val - 1;
+        });
+        pasteRowsSection.appendChild(row);
+      });
+      pasteInputSection.style.display = "none";
+      pasteRowsSection.style.display = "block";
+    });
+
+    pasteCancel.addEventListener("click", () => {
+      pasteModal.style.display = "none";
+      pasteArea.value = "";
+      pasteRowsSection.innerHTML = "";
+    });
+
+    pasteConfirm.addEventListener("click", () => {
+      const rows = pasteRowsSection.querySelectorAll(".paste-row");
+      rows.forEach(row => {
+        const productTitle = row.querySelector(".paste-title").value.trim();
+        const productQty = row.querySelector(".paste-qty-number").textContent;
+        if(productTitle !== ""){
+          const productData = {
+            quantity: productQty,
+            name: productTitle,
+            category: activeList,
+            purchased: false,
+            timestamp: Date.now()
+          };
+          // For pasted items, we do not handle images.
+          addProductToFirestore(productData, () => {});
+        }
+      });
+      pasteModal.style.display = "none";
+      pasteArea.value = "";
+      pasteRowsSection.innerHTML = "";
     });
   </script>
 </body>
