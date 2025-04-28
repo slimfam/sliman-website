@@ -6,10 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 20px; }
+    /* Navigation buttons */
     .buttons { text-align: center; margin-bottom: 20px; }
-    .buttons button { margin: 0 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+    .buttons button { margin: 0 5px; padding: 8px 12px; font-size: 16px; cursor: pointer; border: 1px solid #4CAF50; background: #fff; color: #4CAF50; border-radius: 4px; }
+    .buttons button.active { background: #4CAF50; color: #fff; }
     .section { display: none; }
-    /* Fasting tracker */
+    /* Tables */
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
     th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
     th { background-color: #4CAF50; color: white; }
@@ -17,25 +19,25 @@
     tr.odd { background-color: #e7eef7; }
     .input-hours { width: 50px; text-align: center; }
     #fasting-total { font-weight: bold; }
-    /* Fluids */
-    /* Reuse table styles */
-    /* Menu day buttons */
-    .day-buttons { text-align: center; margin-bottom: 20px; }
-    .day-buttons button { margin: 0 5px; padding: 8px 12px; font-size: 16px; cursor: pointer; border: 1px solid #4CAF50; background: #fff; color: #4CAF50; border-radius: 4px; }
+    /* Menu detail */
+    .day-buttons { text-align: center; margin-bottom: 15px; }
+    .day-buttons button { margin: 0 3px; padding: 6px 10px; font-size: 14px; cursor: pointer; border: 1px solid #4CAF50; background: #fff; color: #4CAF50; border-radius: 4px; }
     .day-buttons button.active { background: #4CAF50; color: #fff; }
     #day-detail { background: #fff; padding: 15px; border-radius: 8px; }
-    #day-detail h3 { margin: 10px 0 5px; }
+    #day-detail h3 { margin: 10px 0 5px; color: #4CAF50; }
     #day-detail p { margin: 4px 0 12px; }
+    #day-detail ul, #day-detail ol { margin: 0 0 12px 20px; }
     /* Shopping list */
     .to-buy, .purchased { background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
     .to-buy h3, .purchased h3 { margin: 0 0 10px; }
-    .paste-btn { font-size: 12px; padding: 3px 6px; margin-top: 5px; border: none; background: #28a745; color: #fff; border-radius: 4px; cursor: pointer; }
+    .paste-btn { font-size: 12px; padding: 3px 6px; border: none; background: #28a745; color: #fff; border-radius: 4px; cursor: pointer; }
     .paste-btn:active { background: #1e7e34; }
     .product-item { background: #f7f7f7; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; padding: 10px; display: flex; align-items: center; }
     .move-btn { width: 20px; height: 20px; border: 2px solid #007bff; border-radius: 50%; background: #fff; cursor: pointer; margin-right: 10px; }
     .move-btn.active { background: #007bff; }
     .product-details { flex-grow: 1; margin-right: 10px; font-size: 16px; }
     .delete-btn { background: red; color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 18px; cursor: pointer; }
+    /* Paste Modal */
     .paste-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000; }
     .paste-modal { background: #fff; border-radius: 8px; padding: 20px; width: 90%; max-width: 400px; }
     .paste-modal h2 { margin-top: 0; text-align: center; }
@@ -51,11 +53,10 @@
 </head>
 <body>
   <div class="buttons">
-<button onclick="showSection('menu')">תפריט</button>
-    <button onclick="showSection('shopping')"> קניות</button>
-    <button onclick="showSection('fasting')"> צום</button>
+    <button onclick="showSection('menu')" class="active">תפריט</button>
+    <button onclick="showSection('shopping')">קניות</button>
+    <button onclick="showSection('fasting')">צום</button>
     <button onclick="showSection('fluids')">נוזלים</button>
-    
   </div>
 
   <!-- Fasting tracker -->
@@ -63,13 +64,13 @@
     <h2>מעקב שעות צום יומי</h2>
     <table>
       <tr><th>יום</th><th>שעות צום</th></tr>
-      <tr class="odd"><td>שני</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
-      <tr class="even"><td>שלישי</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
-      <tr class="odd"><td>רביעי</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
-      <tr class="even"><td>חמישי</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
-      <tr class="odd"><td>שישי</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
-      <tr class="even"><td>שבת</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
-      <tr class="odd"><td>ראשון</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+      <tr class="odd"><td>ב׳</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+      <tr class="even"><td>ג׳</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+      <tr class="odd"><td>ד׳</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+      <tr class="even"><td>ה׳</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+      <tr class="odd"><td>ו׳</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+      <tr class="even"><td>ש׳</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+      <tr class="odd"><td>א׳</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
     </table>
     <p>סך כל שעות הצום השבועיות: <span id="fasting-total">0</span> שעות</p>
   </div>
@@ -78,14 +79,14 @@
   <div id="fluids" class="section">
     <h2>נוזלים מומלצים</h2>
     <table>
-      <tr><th>יום</th><th>מים (ליטר)</th><th>תה ירוק (כוסות)</th><th>שתייה כל (שעות)</th></tr>
-      <tr class="odd"><td>שני</td><td>2</td><td>3</td><td>2</td></tr>
-      <tr class="even"><td>שלישי</td><td>2</td><td>3</td><td>2</td></tr>
-      <tr class="odd"><td>רביעי</td><td>2</td><td>3</td><td>2</td></tr>
-      <tr class="even"><td>חמישי</td><td>2</td><td>3</td><td>2</td></tr>
-      <tr class="odd"><td>שישי</td><td>2</td><td>3</td><td>2</td></tr>
-      <tr class="even"><td>שבת</td><td>2</td><td>3</td><td>2</td></tr>
-      <tr class="odd"><td>ראשון</td><td>2</td><td>3</td><td>2</td></tr>
+      <tr><th>יום</th><th>מים (ליטר)</th><th>תה כוסות</th><th>כל (שעות)</th></tr>
+      <tr class="odd"><td>ב׳</td><td>2</td><td>3</td><td>2</td></tr>
+      <tr class="even"><td>ג׳</td><td>2</td><td>3</td><td>2</td></tr>
+      <tr class="odd"><td>ד׳</td><td>2</td><td>3</td><td>2</td></tr>
+      <tr class="even"><td>ה׳</td><td>2</td><td>3</td><td>2</td></tr>
+      <tr class="odd"><td>ו׳</td><td>2</td><td>3</td><td>2</td></tr>
+      <tr class="even"><td>ש׳</td><td>2</td><td>3</td><td>2</td></tr>
+      <tr class="odd"><td>א׳</td><td>2</td><td>3</td><td>2</td></tr>
     </table>
   </div>
 
@@ -93,13 +94,13 @@
   <div id="menu" class="section">
     <h2>תפריט שבועי</h2>
     <div class="day-buttons">
-      <button data-day="1" class="active">שני</button>
-      <button data-day="2">שלישי</button>
-      <button data-day="3">רביעי</button>
-      <button data-day="4">חמישי</button>
-      <button data-day="5">שישי</button>
-      <button data-day="6">שבת</button>
-      <button data-day="7">ראשון</button>
+      <button data-day="1" class="active">ב׳</button>
+      <button data-day="2">ג׳</button>
+      <button data-day="3">ד׳</button>
+      <button data-day="4">ה׳</button>
+      <button data-day="5">ו׳</button>
+      <button data-day="6">ש׳</button>
+      <button data-day="7">א׳</button>
     </div>
     <div id="day-detail"></div>
   </div>
@@ -135,56 +136,93 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore(); const storage = firebase.storage();
 
-    // Fasting
+    // Fasting tracker
     function updateTotal() {
       let sum = 0; document.querySelectorAll('.input-hours').forEach(i => sum += Number(i.value) || 0);
       document.getElementById('fasting-total').textContent = sum;
     }
 
-    // Menu detail
+    // Menu detail data and logic
     const menuData = [
-      { name: "סלט עוף אבוקדו ובריאות", time: "25 דקות", ingredients: "חזה עוף 200 ג', חצי אבוקדו, חסה, עגבנייה, מלפפון, בצל סגול, שמן זית, לימון, פטרוזיליה, גרעיני חמנייה", method: "1. לצלות חזה עוף 10 דק' מכל צד. 2. לחתוך ירקות. 3. לפרוס אבוקדו. 4. לערבב עם שמן זית ולימון. 5. לפזר חמנייה." },
-      { name: "קערת סלמון ואורז מלא", time: "35 דקות", ingredients: "סלמון 180 ג', אורז מלא, כרובית, פלפל אדום, שמן זית, לימון, פטרוזיליה", method: "1. לאפות סלמון 15 דק'. 2. לבשל אורז 30 דק'. 3. לאדות כרובית. 4. לחתוך פלפל." },
-      { name: "סלט חלבונים מפנק", time: "20 דקות", ingredients: "3 ביצים, חצי כוס חומוס, חסה, עגבנייה, מלפפון, פטרוזיליה, שמן זית, טחינה", method: "1. לבשל ביצים 9 דק'. 2. לחתוך ירקות. 3. לערבב חומוס וטחינה." },
-      { name: "סלט עדשים עם ירקות ושקדים", time: "30 דקות", ingredients: "1 כוס עדשים, גזר, עגבנייה, מלפפון, שקדים, שמן זית, לימון", method: "1. לבשל עדשים 25 דק'. 2. לחתוך ירקות. 3. לערבב." },
-      { name: "תבשיל חומוס, בטטה ואבוקדו", time: "25 דקות", ingredients: "חומוס, בטטה, אבוקדו, גזר, חסה, טחינה, לימון, פטרוזיליה, שמן זית", method: "1. לאפות בטטה 30 דק'. 2. לערבב חומוס עם טחינה ולימון. 3. להוסיף שאר מרכיבים." },
-      { name: "חזה עוף עם בטטה ותפוח עץ", time: "35 דקות", ingredients: "חזה עוף, בטטה, תפוח עץ, שמן זית, קינמון", method: "1. לאפות בטטה 30 דק'. 2. לצלות עוף. 3. לחתוך תפוח עץ וקינמון." },
-      { name: "קינואה ירוקה עם טחינה ואבוקדו", time: "20 דקות", ingredients: "קינואה, אבוקדו, חסה, גזר, טחינה, לימון", method: "1. לבשל קינואה 15 דק'. 2. לחתוך ירקות. 3. לערבב עם טחינה ולימון." }
+      { name: "סלט עוף אבוקדו ובריאות", time: "25 דקות", ingredients: [
+          "חזה עוף: 200 גרם", "אבוקדו: חצי", "חסה: 1 ראש", "עגבנייה: 1 יחידה", "מלפפון: 1 יחידה", "בצל סגול: חצי", "שמן זית: 1 כף", "לימון: חצי", "פטרוזיליה: חופן", "גרעיני חמנייה: 1 כף"
+        ], method: [
+          "לצלות חזה עוף 10 דקות מכל צד", "לחתוך את הירקות", "לפרוס את האבוקדו", "לערבב הכול עם שמן זית ולימון", "לפזר גרעיני חמנייה מעל"
+        ]
+      },
+      { name: "קערת סלמון ואורז מלא", time: "35 דקות", ingredients: [
+          "סלמון: 180 גרם", "אורז מלא: 1 כוס", "כרובית: חצי ראש", "פלפל אדום: 1 יחידה", "שמן זית: 1 כף", "לימון: חצי", "פטרוזיליה: חופן"
+        ], method: [
+          "לאפות סלמון 15 דקות ב‑180°", "לבשל אורז מלא 30 דקות", "לאדות כרובית 6 דקות", "לחתוך פלפל ולפזר מעל"
+        ]
+      },
+      { name: "סלט חלבונים מפנק", time: "20 דקות", ingredients: [
+          "ביצים: 3 יחידות", "חומוס מבושל: 1/2 כוס", "חסה: חופן", "עגבנייה: 1 יחידה", "מלפפון: 1 יחידה", "פטרוזיליה: חופן", "טחינה: 2 כפות"
+        ], method: [
+          "לבשל ביצים 9 דקות", "לקרר ולקלף ביצים", "לחתוך ירקות", "לערבב חומוס עם טחינה ולימון", "להוסיף ביצים פוסקות מעל"
+        ]
+      },
+      { name: "סלט עדשים עם ירקות ושקדים", time: "30 דקות", ingredients: [
+          "עדשים יבשות: 1 כוס", "גזר: 1 יחידה", "עגבניה: 1 יחידה", "מלפפון: 1 יחידה", "שקדים פרוסים: 2 כפות", "שמן זית: 1 כף", "לימון: חצי"
+        ], method: [
+          "לבשל עדשים 25 דקות", "לסנן ולהצניע את העדשים", "לחתוך ירקות דקים", "לערבב הכול עם שמן זית ולימון", "לפזר שקדים מעל"
+        ]
+      },
+      { name: "תבשיל חומוס, בטטה ואבוקדו", time: "25 דקות", ingredients: [
+          "חומוס מבושל: 1 כוס", "בטטה: 1 יחידה בינונית", "אבוקדו: חצי", "גזר: 1 יחידה", "טחינה: 2 כפות", "לימון: חצי"
+        ], method: [
+          "לקלוף ולקצוץ בטטה וגזר", "לאפות בטטה 20 דקות", "לערבב חומוס עם טחינה ולימון", "להוסיף ירקות אפויים", "לקשט אבוקדו פרוס"
+        ]
+      },
+      { name: "חזה עוף עם בטטה ותפוח עץ", time: "35 דקות", ingredients: [
+          "חזה עוף: 200 גרם", "בטטה: 1 יחידה גדולה", "תפוח עץ: 1 יחידה", "שמן זית: 1 כף", "קינמון: 1 כפית"
+        ], method: [
+          "לתבל חזה עוף במלח ופלפל", "לאפות חזה עוף 25 דקות", "לחתוך בטטה ותפוח עץ", "לאפות ירקות 15 דקות נוספות", "לפזר קינמון מעל תפוח"
+        ]
+      },
+      { name: "קינואה ירוקה עם טחינה ואבוקדו", time: "20 דקות", ingredients: [
+          "קינואה: 1 כוס", "אבוקדו: חצי", "חסה: חופן", "גזר: 1 יחידה", "טחינה: 2 כפות", "לימון: חצי"
+        ], method: [
+          "לבשל קינואה 15 דקות", "לקרר מעט קינואה", "לחתוך ירקות ואבוקדו", "לערבב הכול עם טחינה ולימון"
+        ]
+      }
     ];
     function showDay(num) {
       document.querySelectorAll('.day-buttons button').forEach(b => b.classList.remove('active'));
       document.querySelector(`.day-buttons button[data-day="${num}"]`).classList.add('active');
       const d = menuData[num-1];
+      const ingHtml = `<ul>${d.ingredients.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+      const methHtml = `<ol>${d.method.map(s=>`<li>${s}</li>`).join('')}</ol>`;
       document.getElementById('day-detail').innerHTML =
         `<h3>שם ארוחה</h3><p>${d.name}</p>` +
         `<h3>זמן הכנה</h3><p>${d.time}</p>` +
-        `<h3>מצרכים</h3><p>${d.ingredients}</p>` +
-        `<h3>אופן הכנה</h3><p>${d.method}</p>`;
+        `<h3>מצרכים</h3>${ingHtml}` +
+        `<h3>אופן הכנה</h3>${methHtml}`;
     }
     document.querySelectorAll('.day-buttons button').forEach(btn => btn.addEventListener('click', () => showDay(btn.dataset.day)));
     showDay(1);
 
-    // Shopping CRUD and render
+    // Shopping CRUD & render
     function addToFirestore(data){ data.order=Date.now(); return db.collection('fasting').add(data); }
     function updateInFirestore(id,data){ return db.collection('fasting').doc(id).update(data); }
     function deleteFromFirestore(id){ return db.collection('fasting').doc(id).delete(); }
     function createElem(p){
       const div=document.createElement('div'); div.className='product-item'; div.dataset.id=p.id;
       div.innerHTML = `<button class="move-btn ${p.purchased?'active':''}"></button><div class="product-details">${p.quantity} - ${p.name}</div><button class="delete-btn">X</button>`;
-      div.querySelector('.move-btn').addEventListener('click',()=> updateInFirestore(p.id,{purchased:!p.purchased}));
-      div.querySelector('.delete-btn').addEventListener('click',()=> deleteFromFirestore(p.id));
+      div.querySelector('.move-btn').addEventListener('click', ()=> updateInFirestore(p.id,{purchased:!p.purchased}));
+      div.querySelector('.delete-btn').addEventListener('click', ()=> deleteFromFirestore(p.id));
       return div;
     }
     function renderShopping(snapshot){
       const toBuy=document.getElementById('toBuy-super'), pur=document.getElementById('purchased-super');
       toBuy.innerHTML='<h3>לקנות</h3><button class="paste-btn">הדבק</button>';
       pur.innerHTML='<h3>נקנו</h3>';
-      snapshot.forEach(d=>{ const p=d.data(); p.id=d.id; const el=createElem(p); (p.purchased?pur:toBuy).appendChild(el); });
-      document.querySelector('.paste-btn').onclick=openPasteModal;
+      snapshot.forEach(d=>{ const p=d.data(); p.id=d.id; (p.purchased?pur:toBuy).appendChild(createElem(p)); });
+      document.querySelector('.paste-btn').onclick = openPasteModal;
     }
     db.collection('fasting').orderBy('order').onSnapshot(renderShopping);
 
-    // Paste modal
+    // Paste modal logic
     function openPasteModal(){ document.getElementById('pasteModal').style.display='flex'; }
     document.getElementById('processPaste').addEventListener('click',()=>{
       const lines=document.getElementById('pasteArea').value.trim().split(/\r?\n/).filter(l=>l);
@@ -205,12 +243,11 @@
     });
     document.getElementById('pasteCancel').addEventListener('click',()=>{ document.getElementById('pasteModal').style.display='none'; });
 
-    // Sortable init for mobile
-    function initSortable(){ new Sortable(document.getElementById('toBuy-super'),{animation:150,forceFallback:true,fallbackOnBody:true,onEnd:e=>{ document.querySelectorAll('#toBuy-super .product-item').forEach((it,i)=>updateInFirestore(it.dataset.id,{order:i})); }} ); }
+    // Init Sortable for mobile
+    function initSortable(){ new Sortable(document.getElementById('toBuy-super'),{animation:150,forceFallback:true,fallbackOnBody:true,onEnd:e=>{ document.querySelectorAll('#toBuy-super .product-item').forEach((it,i)=>updateInFirestore(it.dataset.id,{order:i})); }}); }
 
     // Navigation
-    function showSection(id){ document.querySelectorAll('.section').forEach(s=>s.style.display='none'); document.getElementById(id).style.display='block'; if(id==='shopping') initSortable(); }
-    // Initialize
+    function showSection(id){ document.querySelectorAll('.section').forEach(s=>s.style.display='none'); document.getElementById(id).style.display='block'; if(id==='shopping') initSortable(); document.querySelectorAll('.buttons button').forEach(b=>b.classList.remove('active')); document.querySelector(`.buttons button[onclick*="${id}"]`).classList.add('active'); }
     showSection('menu');
   </script>
 </body>
