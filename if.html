@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>ניהול צום וסעודה ורשימת קניות</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body { font-family: Arial, sans-serif; background: #f9f9f9; margin: 20px; }
+  .buttons { text-align: center; margin-bottom: 20px; }
+  .buttons button { margin: 0 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+  .section { display: none; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+  th { background-color: #4CAF50; color: white; }
+  tr.even { background-color: #eef7ee; }
+  tr.odd { background-color: #e7eef7; }
+  .input-hours { width: 50px; text-align: center; }
+  #fasting-total { font-weight: bold; }
+
+  /* Paste button styling */
+  .paste-btn {
+    display: inline-block;
+    font-size: 12px;
+    padding: 3px 6px;
+    margin-top: 5px;
+    border: none;
+    background: #28a745;
+    color: #fff;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .paste-btn:active {
+    background: #1e7e34;
+  }
+
+  /* Shopping list styles */
+  .content { padding: 0; }
+  .to-buy, .purchased { background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+  .to-buy h3, .purchased h3 { margin-top: 0; }
+  .product-item { background: #f7f7f7; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 10px; padding: 10px; display: flex; align-items: center; }
+
+  /* Move button (blue circle) */
+  .move-btn {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #007bff;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    margin-left: 10px;
+    flex-shrink: 0;
+  }
+  .move-btn.active {
+    background: #007bff;
+  }
+  .product-details { flex-grow: 1; margin: 0 10px; font-size: 16px; }
+  .delete-btn {
+    cursor: pointer;
+    background: red;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 18px;
+    flex-shrink: 0;
+  }
+
+  /* Modals */
+  .modal-overlay, .paste-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: none; align-items: center; justify-content: center; z-index: 1000; }
+  .modal-overlay { background: rgba(0,0,0,0.5); }
+  .paste-modal-overlay { background: rgba(0,0,0,0.9); padding: 20px; box-sizing: border-box; }
+  .modal, .paste-modal { background: #fff; border-radius: 8px; padding: 20px; max-width: 400px; width: 90%; }
+  .paste-modal h2 { margin-top: 0; }
+  #pasteInputSection textarea { width: 100%; height: 150px; }
+  #pasteRowsSection { max-height: 300px; overflow-y: auto; margin-top: 10px; }
+  .paste-row { display: flex; align-items: center; margin-bottom: 10px; }
+  .paste-qty-col { display: flex; align-items: center; margin-right: 10px; }
+  .paste-qty-col button { width: 24px; height: 24px; border: none; background: #007bff; color: #fff; border-radius: 50%; cursor: pointer; }
+  .paste-qty-number { margin: 0 6px; }
+  .paste-title { flex-grow: 1; padding: 4px; }
+  .paste-modal-buttons { text-align: center; margin-top: 10px; }
+  .paste-modal-buttons button { margin: 0 5px; padding: 8px 16px; }
+</style>
+</head>
+<body>
+<div class="buttons">
+  <button onclick="showSection('fasting')">מעקב צום</button>
+  <button onclick="showSection('fluids')">נוזלים</button>
+  <button onclick="showSection('menu')">תפריט</button>
+  <button onclick="showSection('shopping')">רשימת קניות</button>
+</div>
+<!-- Fasting tracker -->
+<div id="fasting" class="section">
+  <h2>מעקב שעות צום יומי</h2>
+  <table>
+    <tr><th>יום</th><th>שעות צום</th></tr>
+    <tr class="odd"><td>שני</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+    <tr class="even"><td>שלישי</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+    <tr class="odd"><td>רביעי</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+    <tr class="even"><td>חמישי</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+    <tr class="odd"><td>שישי</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+    <tr class="even"><td>שבת</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+    <tr class="odd"><td>ראשון</td><td><input type="number" min="0" max="24" class="input-hours" onchange="updateTotal()"></td></tr>
+  </table>
+  <p>סך כל שעות הצום השבועיות: <span id="fasting-total">0</span> שעות</p>
+</div>
+<!-- Fluids schedule -->
+<div id="fluids" class="section">
+  <h2>נוזלים מומלצים ביום</h2>
+  <table>
+    <tr><th>יום</th><th>מים (ליטר)</th><th>תה ירוק (כוסות)</th><th>שתייה כל (שעות)</th></tr>
+    <tr class="odd"><td>שני</td><td>2</td><td>3</td><td>2</td></tr>
+    <tr class="even"><td>שלישי</td><td>2</td><td>3</td><td>2</td></tr>
+    <tr class="odd"><td>רביעי</td><td>2</td><td>3</td><td>2</td></tr>
+    <tr class="even"><td>חמישי</td><td>2</td><td>3</td><td>2</td></tr>
+    <tr class="odd"><td>שישי</td><td>2</td><td>3</td><td>2</td></tr>
+    <tr class="even"><td>שבת</td><td>2</td><td>3</td><td>2</td></tr>
+    <tr class="odd"><td>ראשון</td><td>2</td><td>3</td><td>2</td></tr>
+  </table>
+</div>
+<!-- Menu -->
+<div id="menu" class="section">
+  <h2>תפריט שבועי</h2>
+  <table>
+    <tr><th>יום</th><th>שם הארוחה</th><th>מצרכים</th><th>אופן הכנה</th></tr>
+    <tr class="even"><td>שני</td><td>סלט עוף אבוקדו ובריאות</td><td>חזה עוף</td><td>לצלות עוף 20 דקות, לחתוך ירקות, לערבב.</td></tr>
+    <tr class="odd"><td>שלישי</td><td>קערת סלמון ואורז מלא</td><td>סלמון, אורז מלא</td><td>לאפות סלמון 15 דקות, לבשל אורז 30 דקות.</td></tr>
+    <tr class="even"><td>רביעי</td><td>סלט חלבונים מפנק</td><td>ביצים, חומוס</td><td>לבשל ביצים 9 דקות, לערבב חומוס וטחינה.</td></tr>
+    <tr class="odd"><td>חמישי</td><td>סלט עדשים עם ירקות ושקדים</td><td>עדשים</td><td>לבשל עדשים 25 דקות, לערבב.</td></tr>
+    <tr class="even"><td>שישי</td><td>תבשיל חומוס, בטטה ואבוקדו</td><td>בטטה, חומוס</td><td>לאפות בטטה 30 דקות, לערבב.</td></tr>
+    <tr class="odd"><td>שבת</td><td>חזה עוף עם בטטה ותפוח עץ</td><td>חזה עוף, בטטה</td><td>לצלות עוף 20 דקות, לאפות בטטה 30 דקות.</td></tr>
+    <tr class="even"><td>ראשון</td><td>קינואה ירוקה עם טחינה ואבוקדו</td><td>קינואה</td><td>לבשל קינואה 15 דקות, לערבב.</td></tr>
+  </table>
+</div>
+<!-- Shopping list -->
+<div id="shopping" class="section">
+  <h2>רשימת קניות</h2>
+  <div class="content">
+    <div id="listsContainer">
+      <div class="list-section active" id="list-super">
+        <div class="to-buy" id="toBuy-super"><h3>לקנות</h3><button class="paste-btn">הדבק</button></div>
+        <div class="purchased" id="purchased-super"><h3>נקנו</h3></div>
+      </div>
+    </div>
+  </div>
+  <!-- Modals -->
+  <div class="modal-overlay" id="modalOverlay"></div>
+  <div class="paste-modal-overlay" id="pasteModal">
+    <div class="paste-modal">
+      <h2>הדבק פריטים</h2>
+      <div id="pasteInputSection">
+        <textarea id="pasteArea" placeholder="הדבק כאן טקסט, כל שורה מוצר"></textarea>
+        <button id="processPaste">עבד</button>
+      </div>
+      <div id="pasteRowsSection"></div>
+      <div class="paste-modal-buttons">
+        <button id="pasteCancel">ביטול</button>
+        <button id="pasteConfirm">אישור</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Firebase and Libraries -->
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyBH0RwdCkSOQwCR8v2JKO9pliyOkKUuhBI",
+  authDomain: "websliman.firebaseapp.com",
+  projectId: "websliman",
+  storageBucket: "websliman.firebasestorage.app",
+  messagingSenderId: "36202244653",
+  appId: "1:36202244653:web:c7d9aa36b425cc63c3e6a4"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const storage = firebase.storage();
+
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+}
+
+function updateTotal() {
+  let sum = 0;
+  document.querySelectorAll('.input-hours').forEach(i => sum += Number(i.value) || 0);
+  document.getElementById('fasting-total').textContent = sum;
+}
+
+// Shopping CRUD
+function addToFirestore(data) { data.order = Date.now(); return db.collection('fasting').add(data); }
+function updateInFirestore(id, data) { return db.collection('fasting').doc(id).update(data); }
+function deleteFromFirestore(id) { return db.collection('fasting').doc(id).delete(); }
+
+function createElem(prod) {
+  const div = document.createElement('div'); div.className = 'product-item'; div.dataset.id = prod.id;
+  div.innerHTML = `
+    <button class="move-btn ${prod.purchased ? 'active' : ''}"></button>
+    <div class="product-details">${prod.quantity} - ${prod.name}</div>
+    <button class="delete-btn">X</button>
+  `;
+  div.querySelector('.move-btn').addEventListener('click', () => {
+    const newState = !prod.purchased;
+    updateInFirestore(prod.id, { purchased: newState });
+  });
+  div.querySelector('.delete-btn').addEventListener('click', () => deleteFromFirestore(prod.id));
+  return div;
+}
+
+function render(snapshot) {
+  const toBuy = document.getElementById('toBuy-super');
+  const pur = document.getElementById('purchased-super');
+  toBuy.innerHTML = '<h3>לקנות</h3><button class="paste-btn">הדבק</button>';
+  pur.innerHTML = '<h3>נקנו</h3>';
+  snapshot.forEach(d => { let p = d.data(); p.id = d.id; const el = createElem(p); (p.purchased ? pur : toBuy).appendChild(el); });
+  new Sortable(toBuy, { animation: 150, onEnd: () => { toBuy.querySelectorAll('.product-item').forEach((it, i) => updateInFirestore(it.dataset.id,{ order: i })); }});
+  document.querySelector('.paste-btn').addEventListener('click', openPasteModal);
+}
+
+db.collection('fasting').orderBy('order').onSnapshot(render);
+
+// Paste Modal Logic
+function openPasteModal() { document.getElementById('pasteModal').style.display = 'flex'; }
+document.getElementById('processPaste').addEventListener('click', () => {
+  const lines = document.getElementById('pasteArea').value.trim().split(/\r?\n/).filter(l => l);
+  const section = document.getElementById('pasteRowsSection'); section.innerHTML = '';
+  lines.forEach(line => {
+    const row = document.createElement('div'); row.className = 'paste-row';
+    row.innerHTML = `<div class="paste-qty-col"><button class="paste-plus">+</button><span class="paste-qty-number">1</span><button class="paste-minus">-</button></div><input type="text" class="paste-title" value="${line.trim()}" />`;
+    row.querySelector('.paste-plus').onclick = () => { let sp=row.querySelector('.paste-qty-number'); sp.textContent = +sp.textContent + 1; };
+    row.querySelector('.paste-minus').onclick = () => { let sp=row.querySelector('.paste-qty-number'); if(+sp.textContent>1) sp.textContent--; };
+    section.appendChild(row);
+  });
+});
+document.getElementById('pasteConfirm').addEventListener('click', () => {
+  document.querySelectorAll('#pasteRowsSection .paste-row').forEach(row => {
+    const name = row.querySelector('.paste-title').value.trim();
+    const qty = row.querySelector('.paste-qty-number').textContent;
+    if(name) addToFirestore({ name, quantity: qty, purchased: false });
+  });
+  document.getElementById('pasteModal').style.display = 'none';
+});
+document.getElementById('pasteCancel').addEventListener('click', () => { document.getElementById('pasteModal').style.display = 'none'; });
+
+// Init default view
+showSection('fasting');
+</script>
+</body>
+</html>
